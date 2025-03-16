@@ -13,9 +13,6 @@ const RPC_URL_SEPOLIA = process.env.RPC_URL_SEPOLIA || "";
 module.exports = {
   solidity: "0.8.28",
   defaultNetwork: "localhost",
-  coverage: {
-    include: ["contracts/mocks/CompoundMock2.sol"]
-  },
   networks: {
     localhost: {
       url: "http://127.0.0.1:8545",
