@@ -101,4 +101,4 @@ describe("EZdefi", function () {
             await expect(ezdefi.rebalance()).to.be.revertedWith("Rebalance too soon");
         });
     });
-});.
+});

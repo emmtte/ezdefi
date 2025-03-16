@@ -36,7 +36,7 @@ npx hardhat node
 node scripts/test_chain.js
 npx hardhat ignition deploy ignition/modules/EZdefi.js --network localhost
 npx hardhat test test/EZdefi.js 
-npx hardhat coverage test/voting.ts
+npx hardhat coverage --config hardhat.config.default.js
 
 ## Fork
 npx hardhat clean

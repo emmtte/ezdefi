@@ -9,7 +9,7 @@ interface IMintableERC20 {
     function mint(address to, uint256 amount) external;
 }
 
-contract SimpleCompoundVault is ERC4626, Ownable {
+contract cToken is ERC4626, Ownable {
     // Taux d'intérêt annuel en pourcentage (10% par défaut, avec 2 décimales - 1000 = 10.00%)
     uint256 public interestRate = 1000;
     
