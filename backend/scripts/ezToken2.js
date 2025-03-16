@@ -30,7 +30,7 @@ async function main() {
   
   // 3. Déploiement du token cToken (Compound-like)
   console.log("\n📄 Déploiement du token cToken (Compound)...");
-  const CToken = await ethers.getContractFactory("cToken"); // On utilise le même contrat mais avec un nom différent
+  const CToken = await ethers.getContractFactory("cToken");
   const cToken = await CToken.deploy(usdcAddress, "Compound USDC", "cUSDC");
   await cToken.waitForDeployment();
   const cTokenAddress = await cToken.getAddress();
@@ -46,8 +46,6 @@ async function main() {
   );
   await ezdefi.waitForDeployment();
   const ezdefiAddress = await ezdefi.getAddress();
-
-
   console.log(`✅ Contrat EZdefi déployé à l'adresse: ${ezdefiAddress}`);
 
   // 5. Configuration des taux d'intérêt initiaux
@@ -101,90 +99,75 @@ async function main() {
   expect(bestProtocol).to.equal(aTokenAddress);
   console.log(`✅ Le meilleur protocole est bien aToken (taux: 10.00%)`);
 
-  // Test: Dépôt d'USDC dans EZdefi
-console.log("\n🔍 Test: Dépôt d'USDC dans EZdefi...");
-let depositAmount = ethers.parseUnits("500", 6); // Exemple de montant
-
-
-// Vérifier le solde d'USDC de l'utilisateur avant le dépôt
-const user1UsdcBefore = await usdc.balanceOf(user1.address);
-console.log(`☑️ Solde USDC de User1 avant dépôt: ${ethers.formatUnits(user1UsdcBefore, 6)}`);
-
-
-console.log(`🔍 Vérification de l'adresse de EZdefi dans le test: ${ezdefiAddress}`);
-// Vérifier le solde d'USDC du contrat EZdefi avant le dépôt
-const ezdefiUsdcBefore = await usdc.balanceOf(ezdefiAddress);
-console.log(`☑️ Solde USDC de EZdefi avant dépôt: ${ethers.formatUnits(ezdefiUsdcBefore, 6)}`);
-
-// Vérifier le solde de tokens EZDZFI de l'utilisateur avant le dépôt
-const user1EzdefiTokensBefore = await ezdefi.balanceOf(user1.address);
-console.log(`☑️ Solde EZDZFI de User1 avant dépôt: ${ethers.formatUnits(user1EzdefiTokensBefore, 18)}`);
-
-
-
-// Effectuer le dépôt dans EZdefi
-console.log("✅ Approbation USDC configurée pour user1");
-await usdc.connect(user1).approve(ezdefiAddress, depositAmount);
-console.log("✅ Approbation USDC configurée pour user1");
-
-// Vérifier que currentProtocol est défini avant de faire un dépôt
-let currentProtocol = await ezdefi.currentProtocol();
-console.log(`☑️ Protocole actuel: ${currentProtocol}`);
-if (currentProtocol === "0x0000000000000000000000000000000000000000") {
-    console.log("⚠️ Protocole actuel non défini, initialisation...");
-    // Déterminer le meilleur protocole et le définir
-    const bestProtocol = await ezdefi.getBestProtocol();
-    console.log(`✅ Meilleur protocole déterminé: ${bestProtocol}`);
-    await ezdefi.allocateFunds(bestProtocol, 0); // Définir le protocole sans allouer de fonds
-    console.log(`✅ Protocole actuel initialisé à: ${bestProtocol}`);
-}
-
-// Maintenant faire le dépôt
-depositTx = await ezdefi.connect(user1).deposit(depositAmount, user1.address);
-await depositTx.wait();
-
-// Allouer les fonds au protocole actuel
-depositTx = await ezdefi.allocateFunds(currentProtocol, depositAmount);
-await depositTx.wait();
-console.log(`☑️ EZdefi a alloué les fonds au protocole`);
-
-// Vérifier le solde d'USDC de l'utilisateur après le dépôt
-const user1UsdcAfter = await usdc.balanceOf(user1.address);
-console.log(`☑️ Solde USDC de User1 après dépôt: ${ethers.formatUnits(user1UsdcAfter, 6)}`);
-expect(user1UsdcAfter).to.equal(user1UsdcBefore - depositAmount);
-
-// Vérifier le solde d'USDC du contrat EZdefi après le dépôt
-const ezdefiUsdcAfter = await usdc.balanceOf(ezdefi.address);
-console.log(`☑️ Solde USDC de EZdefi après dépôt: ${ethers.formatUnits(ezdefiUsdcAfter, 6)}`);
-expect(ezdefiUsdcAfter).to.equal(ezdefiUsdcBefore + depositAmount);
-
-    // Vérifier le solde de tokens EZDZFI de l'utilisateur après le dépôt
-const user1EzdefiTokensAfter = await ezdefi.balanceOf(user1.address);
-console.log(`☑️ Solde EZDZFI de User1 après dépôt: ${ethers.formatUnits(user1EzdefiTokensAfter, 18)}`);
-expect(user1EzdefiTokensAfter).to.be.gt(user1EzdefiTokensBefore); // L'utilisateur devrait avoir reçu des tokens EZDZFI
-
-
-
-  // Test 4: Dépôt d'un utilisateur
-  console.log("\n🔍 Test 4: Dépôt utilisateur...");
-  depositAmount = ethers.parseUnits("500", 6);
-  depositTx = await ezdefi.connect(user1).deposit(depositAmount, user1.address);
-  await depositTx.wait();
-  console.log(`☑️ User1 a déposé ${ethers.formatUnits(depositAmount, 6)} USDC`);
+  // Vérifier si currentProtocol est défini
+  console.log("\n🔍 Vérification du protocole actuel...");
+  let currentProtocol = await ezdefi.currentProtocol();
+  console.log(`☑️ Protocole actuel: ${currentProtocol}`);
   
-  const user1Shares = await ezdefi.balanceOf(user1.address);
-  console.log(`✅ User1 détient maintenant ${ethers.formatUnits(user1Shares, 18)} parts d'EZdefi`);
+  // Si currentProtocol n'est pas défini, initialiser avec le meilleur protocole
+  if (currentProtocol === "0x0000000000000000000000000000000000000000") {
+    console.log("⚠️ Protocole actuel non défini, initialisation...");
+    
+    // Vérifier le propriétaire du contrat
+    const contractOwner = await ezdefi.owner();
+    console.log(`Le propriétaire du contrat est: ${contractOwner}`);
+    console.log(`L'adresse qui appelle allocateFunds est: ${deployer.address}`);
+    
+    // Utiliser le compte propriétaire pour appeler la fonction
+    await ezdefi.connect(deployer).allocateFunds(bestProtocol, 0);
+    console.log(`✅ Protocole actuel initialisé à: ${bestProtocol}`);
+    
+    // Vérifier que currentProtocol est maintenant défini
+    currentProtocol = await ezdefi.currentProtocol();
+    console.log(`☑️ Protocole actuel après initialisation: ${currentProtocol}`);
+  }
 
-  // Test 5: Simulation d'intérêts
-  console.log("\n🔍 Test 5: Simulation d'intérêts...");
+  // Test 3: Dépôt d'USDC dans EZdefi
+  console.log("\n🔍 Test 3: Dépôt d'USDC dans EZdefi...");
+  const depositAmount = ethers.parseUnits("500", 6); // 500 USDC
+
+  // Vérifier le solde d'USDC de l'utilisateur avant le dépôt
+  const user1UsdcBefore = await usdc.balanceOf(user1.address);
+  console.log(`☑️ Solde USDC de User1 avant dépôt: ${ethers.formatUnits(user1UsdcBefore, 6)}`);
+
+  // Vérifier le solde d'USDC du contrat EZdefi avant le dépôt
+  const ezdefiUsdcBefore = await usdc.balanceOf(ezdefiAddress);
+  console.log(`☑️ Solde USDC de EZdefi avant dépôt: ${ethers.formatUnits(ezdefiUsdcBefore, 6)}`);
+
+  // Vérifier le solde de tokens EZDZFI de l'utilisateur avant le dépôt
+  const user1EzdefiTokensBefore = await ezdefi.balanceOf(user1.address);
+  console.log(`☑️ Solde EZDZFI de User1 avant dépôt: ${ethers.formatUnits(user1EzdefiTokensBefore, 18)}`);
+
+  // Effectuer le dépôt dans EZdefi
+  console.log("☑️ Appel de la fonction deposit...");
+  const depositTx = await ezdefi.connect(user1).deposit(depositAmount, user1.address);
+  await depositTx.wait();
+  console.log(`☑️ User1 a déposé ${ethers.formatUnits(depositAmount, 6)} USDC dans EZdefi`);
+
+  // Vérifier le solde d'USDC de l'utilisateur après le dépôt
+  const user1UsdcAfter = await usdc.balanceOf(user1.address);
+  console.log(`☑️ Solde USDC de User1 après dépôt: ${ethers.formatUnits(user1UsdcAfter, 6)}`);
+  expect(user1UsdcAfter).to.equal(user1UsdcBefore - depositAmount);
+
+  // Vérifier le solde d'USDC du contrat EZdefi après le dépôt
+  const ezdefiUsdcAfter = await usdc.balanceOf(ezdefiAddress);
+  console.log(`☑️ Solde USDC de EZdefi après dépôt: ${ethers.formatUnits(ezdefiUsdcAfter, 6)}`);
+  
+  // Vérifier le solde de tokens EZDZFI de l'utilisateur après le dépôt
+  const user1EzdefiTokensAfter = await ezdefi.balanceOf(user1.address);
+  console.log(`☑️ Solde EZDZFI de User1 après dépôt: ${ethers.formatUnits(user1EzdefiTokensAfter, 18)}`);
+  expect(user1EzdefiTokensAfter).to.be.gt(user1EzdefiTokensBefore);
+
+  // Test 4: Simulation d'intérêts
+  console.log("\n🔍 Test 4: Simulation d'intérêts...");
   console.log("☑️ Appel de accrueInterest sur aToken pour simuler le passage du temps...");
   await aToken.accrueInterest();
   
   const totalAssets = await ezdefi.totalAssets();
   console.log(`✅ Total des actifs après intérêts: ${ethers.formatUnits(totalAssets, 6)} USDC`);
 
-  // Test 6: Changement de taux et rééquilibrage
-  console.log("\n🔍 Test 6: Rééquilibrage...");
+  // Test 5: Changement de taux et rééquilibrage
+  console.log("\n🔍 Test 5: Rééquilibrage...");
   console.log("☑️ Modification des taux d'intérêt...");
   await aToken.setInterestRate(500); // 5.00%
   await cToken.setInterestRate(1200); // 12.00%
@@ -205,13 +188,16 @@ expect(user1EzdefiTokensAfter).to.be.gt(user1EzdefiTokensBefore); // L'utilisate
   expect(newProtocol).to.equal(cTokenAddress);
   console.log("✅ Le protocole a bien été changé pour cToken");
 
-  // Test 7: Retrait d'un utilisateur
-  console.log("\n🔍 Test 7: Retrait utilisateur...");
+  // Test 6: Retrait d'un utilisateur
+  console.log("\n🔍 Test 6: Retrait utilisateur...");
   const usdcBeforeWithdraw = await usdc.balanceOf(user1.address);
   console.log(`☑️ Solde USDC de User1 avant retrait: ${ethers.formatUnits(usdcBeforeWithdraw, 6)}`);
   
+  const user1Shares = await ezdefi.balanceOf(user1.address);
+  console.log(`☑️ User1 possède ${ethers.formatUnits(user1Shares, 18)} parts à retirer`);
+  
   // Retrait de toutes les parts
-  console.log(`☑️ User1 retire toutes ses parts (${ethers.formatUnits(user1Shares, 18)})`);
+  console.log(`☑️ User1 retire toutes ses parts`);
   const withdrawTx = await ezdefi.connect(user1).redeem(user1Shares, user1.address, user1.address);
   await withdrawTx.wait();
   

@@ -11,7 +11,7 @@ interface IMintableERC20 {
 
 contract aToken is ERC4626, Ownable {
     // Taux d'intérêt annuel en pourcentage (10% par défaut, avec 2 décimales - 1000 = 10.00%)
-    uint256 public interestRate = 1000;
+    uint256 public interestRate = 1500;
     
     // Horodatage du dernier calcul d'intérêts
     uint256 public lastInterestUpdate;
@@ -29,6 +29,11 @@ contract aToken is ERC4626, Ownable {
         interestRate = newRate;
     }
     
+    // Fonction pour récupérer le taux d'intérêt actuel
+    function getInterestRate() public view returns (uint256) {
+        return interestRate;
+    }
+
     // Calcule et ajoute les intérêts depuis la dernière mise à jour
     function _accrueInterest() internal {
         uint256 timeElapsed = block.timestamp - lastInterestUpdate;
