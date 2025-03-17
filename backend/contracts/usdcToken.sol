@@ -5,6 +5,8 @@ import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
 contract MintableUSDC is ERC20, Ownable {
+    mapping(address => bool) public minters;
+    
     constructor(
         string memory name,
         string memory symbol,
@@ -13,7 +15,16 @@ contract MintableUSDC is ERC20, Ownable {
         _mint(msg.sender, initialSupply);
     }
     
-    function mint(address to, uint256 amount) external onlyOwner {
+    function addMinter(address minter) external onlyOwner {
+        minters[minter] = true;
+    }
+    
+    function removeMinter(address minter) external onlyOwner {
+        minters[minter] = false;
+    }
+    
+    function mint(address to, uint256 amount) external {
+        require(minters[msg.sender] || msg.sender == owner(), "Not authorized to mint");
         _mint(to, amount);
     }
 }

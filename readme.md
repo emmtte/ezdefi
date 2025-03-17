@@ -50,15 +50,18 @@ npx hardhat coverage test/voting.ts //a mettre dans le readme
 //fork du mainnet
 voir slide du cours de jeudi 15/02
 
-frontend
-npx create-next-app@latest .
-=> No/No/Yes/No/Yes/No/No
 
+## Frontend
+npx create-next-app@14 .   // ne pas oublier le point
+=> No/Yes/Yes/No/Yes/No
 npm install @rainbow-me/rainbowkit wagmi viem@2.x @tanstack/react-query
-
-npx shadcn@latest init
+(npm install @radix-ui/react-icons) //optionel
 => slate
-
-npm install @radix-ui/react-icons
-npx shadcn@latest add alert badge button card input sonner
+npx shadcn@latest init (use legacy peer deep)
+npx shadcn@latest add alert badge button card input label
 npm run dev
+
+pour deployer 
+npm run build
+npm intall pretty pino
+

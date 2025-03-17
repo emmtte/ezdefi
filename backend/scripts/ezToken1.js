@@ -91,13 +91,74 @@ async function main() {
   console.log(`Parts de l'optimizer dans aToken: ${ethers.formatUnits(await aToken.balanceOf(await yieldOptimizer.getAddress()), 18)}`);
   console.log(`Parts de l'optimizer dans cToken: ${ethers.formatUnits(await cToken.balanceOf(await yieldOptimizer.getAddress()), 18)}`);
   
+  // Changement des taux pour le scénario 3
+  console.log("\n=== Scénario 3: cToken redevient plus rentable ===");
+  await aToken.setInterestRate(1000); // 10%
+  await cToken.setInterestRate(3500); // 35%
+  
+  // Nouvelle accumulation d'intérêts
+  console.log("Simulation d'une accumulation d'intérêts pour cToken...");
+  await ethers.provider.send("evm_increaseTime", [15 * 24 * 60 * 60]); // 15 jours
+  await ethers.provider.send("evm_mine");
+  await aToken.accrueInterest();
+  await cToken.accrueInterest();
+  
+  // Deuxième rebalancement
+  console.log("Rebalancement à nouveau vers cToken...");
+  await yieldOptimizer.rebalance();
+  
+  // Affichage des soldes finaux
+  console.log("\nSoldes finaux après le deuxième rebalancement:");
+  console.log(`Solde total géré par l'optimizer: ${ethers.formatUnits(await yieldOptimizer.totalAssets(), 6)} USDC`);
+  console.log(`Solde dans aToken: ${ethers.formatUnits(await aToken.totalAssets(), 6)} USDC`);
+  console.log(`Solde dans cToken: ${ethers.formatUnits(await cToken.totalAssets(), 6)} USDC`);
+  console.log(`Vault actuel de l'optimizer: ${await yieldOptimizer.currentVault()}`);
+  console.log(`Parts de l'optimizer dans aToken: ${ethers.formatUnits(await aToken.balanceOf(await yieldOptimizer.getAddress()), 18)}`);
+  console.log(`Parts de l'optimizer dans cToken: ${ethers.formatUnits(await cToken.balanceOf(await yieldOptimizer.getAddress()), 18)}`);
+  
+  // Test de retrait utilisateur
+  console.log("\n=== Test de retrait utilisateur ===");
+  const sharesBeforeWithdraw = await yieldOptimizer.balanceOf(user1.address);
+  console.log(`Shares avant retrait: ${ethers.formatUnits(sharesBeforeWithdraw, 18)}`);
+
+  // Récupération du solde USDC avant le retrait
+  const usdcBalanceBeforeWithdraw = await usdc.balanceOf(user1.address);
+
+  // Retrait partiel (sans callStatic)
+  const txWithdraw = await yieldOptimizer.connect(user1).withdraw(sharesBeforeWithdraw / 2n);
+  await txWithdraw.wait();
+
+  // Calculer le montant retiré en comparant les soldes USDC
+  const usdcBalanceAfterWithdraw = await usdc.balanceOf(user1.address);
+  const amountWithdrawn = usdcBalanceAfterWithdraw - usdcBalanceBeforeWithdraw;
+
+  console.log(`Montant retiré: ${ethers.formatUnits(amountWithdrawn, 6)} USDC`);
+  console.log(`Shares après retrait partiel: ${ethers.formatUnits(await yieldOptimizer.balanceOf(user1.address), 18)}`);
+
+  
+  // Second utilisateur dépose
+  console.log("\n=== Dépôt d'un second utilisateur ===");
+  await yieldOptimizer.connect(user2).deposit(ethers.parseUnits("2000", 6));
+  console.log(`Solde total géré par l'optimizer: ${ethers.formatUnits(await yieldOptimizer.totalAssets(), 6)} USDC`);
+  console.log(`Shares détenues par user2: ${ethers.formatUnits(await yieldOptimizer.balanceOf(user2.address), 18)}`);
+  
+  // Simulation de plus d'intérêts
+  console.log("\n=== Simulation finale d'intérêts ===");
+  await ethers.provider.send("evm_increaseTime", [30 * 24 * 60 * 60]); // 30 jours
+  await ethers.provider.send("evm_mine");
+  await cToken.accrueInterest();
+  
+  // Valeurs finales
+  console.log("\n=== États finaux ===");
+  console.log(`Solde total géré par l'optimizer: ${ethers.formatUnits(await yieldOptimizer.totalAssets(), 6)} USDC`);
+  console.log(`Valeur d'une share user1: ${ethers.formatUnits(await yieldOptimizer.totalAssets() * ethers.parseUnits("1", 18) / await yieldOptimizer.totalSupply(), 6)} USDC`);
+  
+  console.log("\n=== Test terminé avec succès ===");
 }
 
-// Exécution du script principal avec gestion des erreurs
 main()
   .then(() => process.exit(0))
   .catch((error) => {
-    console.error("❌ Erreur lors du déploiement et des tests:");
     console.error(error);
     process.exit(1);
   });

@@ -35,7 +35,7 @@ contract aToken is ERC4626, Ownable {
     }
 
     // Calcule et ajoute les intérêts depuis la dernière mise à jour
-    function _accrueInterest() internal {
+    function accrueInterest() external {
         uint256 timeElapsed = block.timestamp - lastInterestUpdate;
         if (timeElapsed > 0) {
             uint256 totalAssets = IERC20(asset()).balanceOf(address(this));
@@ -51,34 +51,5 @@ contract aToken is ERC4626, Ownable {
             }
             lastInterestUpdate = block.timestamp;
         }
-    }
-    
-    // Override deposit pour accumuler les intérêts avant le dépôt
-    function deposit(uint256 assets, address receiver) public override returns (uint256) {
-        _accrueInterest();
-        return super.deposit(assets, receiver);
-    }
-    
-    // Override withdraw pour accumuler les intérêts avant le retrait
-    function withdraw(uint256 assets, address receiver, address owner) public override returns (uint256) {
-        _accrueInterest();
-        return super.withdraw(assets, receiver, owner);
-    }
-    
-    // Override redeem pour accumuler les intérêts avant le rachat
-    function redeem(uint256 shares, address receiver, address owner) public override returns (uint256) {
-        _accrueInterest();
-        return super.redeem(shares, receiver, owner);
-    }
-    
-    // Override mint pour accumuler les intérêts avant le mint
-    function mint(uint256 shares, address receiver) public override returns (uint256) {
-        _accrueInterest();
-        return super.mint(shares, receiver);
-    }
-    
-    // Permet de forcer l'accumulation des intérêts à tout moment
-    function accrueInterest() external {
-        _accrueInterest();
     }
 }

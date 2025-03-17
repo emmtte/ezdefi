@@ -1,34 +1,74 @@
-import { buildModule } from "@nomicfoundation/hardhat-ignition/modules";
+// ignition/modules/EZdefi.js
+const { buildModule } = require("@nomicfoundation/hardhat-ignition/modules");
+const { ethers } = require("ethers");
 
-const deployEZdefiModule = buildModule("DeployEZdefi", (m) => {
-  // Déploiement des mocks
-  const MockERC20 = m.contract("MockERC20", ["USD Coin", "USDC", 6]);
-  const MockAaveLendingPool = m.contract("MockAaveLendingPool");
-  const MockCompoundCToken = m.contract("MockCompoundCToken");
+module.exports = buildModule("EZdefi", (m) => {
+  // Utilisation d'ethers pour manipuler les unités
+  const initialSupply = ethers.parseUnits("10000000", 6);
+  const userAmount = ethers.parseUnits("10000", 6);
+  
+  // Déploiement du token USDC mintable
+  const usdc = m.contract("MintableUSDC", ["USD Coin", "USDC", initialSupply]);
+  
+  // Provide a unique ID for the first aToken contract
+  const aToken = m.contract("aToken", [usdc, "Aave USDC Vault", "aUSDC"], { id: "aaveUSDC" });
+  // Provide a unique ID for the second aToken contract
+  const cToken = m.contract("aToken", [usdc, "Compound USDC Vault", "cUSDC"], { id: "compoundUSDC" });
+ 
+  // Déploiement du YieldOptimizer
+  const yieldOptimizer = m.contract("YieldOptimizer", [usdc, [aToken, cToken]]);
 
-  // Déploiement de EZdefi
-  const EZdefi = m.contract("EZdefi", [
-    MockERC20,
-    MockAaveLendingPool,
-    MockCompoundCToken,
-  ]);
+  // Autorisation des vaults à mint des tokens USDC
+  const addMinterAToken = m.call(usdc, "addMinter", [aToken], { id: "minterAaveUSDC" });
+  const addMinterCToken = m.call(usdc, "addMinter", [cToken], { id: "minterCompoundUSDC" });
 
-  // Initialisation des taux (facultatif, mais recommandé pour les tests)
-  m.call(MockAaveLendingPool, "setRate", [100]); // Exemple de taux pour Aave
-  m.call(MockCompoundCToken, "setRate", [90]); // Exemple de taux pour Compound
+  // Configuration des transferts de tokens aux utilisateurs
+  // Nous utilisons getAccount pour récupérer dynamiquement les adresses
+  const user1 = m.getAccount(1); // Le second compte (index 1) sera user1
+  const user2 = m.getAccount(2); // Le troisième compte (index 2) sera user2
 
-  // Mint des tokens USDC pour le déployeur (facultatif, mais recommandé pour les tests)
-  m.call(MockERC20, "mint", [m.getAccount(0), 1000000]);
+  const transferUser1 = m.call(usdc, "transfer", [user1, userAmount], {
+    id: "transfer_user1",
+    after: [addMinterAToken, addMinterCToken],
+  });
 
-  // Approbation des tokens USDC pour EZdefi (facultatif, mais recommandé pour les tests)
-  m.call(MockERC20, "approve", [EZdefi, 1000000]);
+  const transferUser2 = m.call(usdc, "transfer", [user2, userAmount], {
+    id: "transfer_user2",
+    after: [addMinterAToken, addMinterCToken],
+  });
 
+  // Approbations pour les opérations
+  const approveUser1 = m.call(
+    usdc,
+    "approve",
+    [yieldOptimizer, userAmount],
+    {
+      id: "approve_user1",
+      from: user1,
+      after: [transferUser1],
+    }
+  );
+
+  const approveUser2 = m.call(
+    usdc,
+    "approve",
+    [yieldOptimizer, userAmount],
+    {
+      id: "approve_user2",
+      from: user2,
+      after: [transferUser2],
+    }
+  );
+  
+  // Retourner tous les contrats et informations importantes
   return {
-    MockERC20,
-    MockAaveLendingPool,
-    MockCompoundCToken,
-    EZdefi,
+    usdc,
+    aToken,
+    cToken,
+    yieldOptimizer,
+    transferUser1,
+    transferUser2,
+    approveUser1,
+    approveUser2,
   };
 });
-
-export default deployEZdefiModule;
