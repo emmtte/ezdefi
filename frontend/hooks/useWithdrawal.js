@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
 import { parseEther } from 'viem';
 import { toast } from 'sonner';
-import { CONTRACT_ADDRESS, CONTRACT_ABI } from '@/utils/constants'
+import { YIELD_OPTIMIZER_ADDRESS, YIELD_OPTIMIZER_ABI } from '@/utils/constants'
 
 export const useWithdrawal = ( account, refetch) => {
   const [amount, setAmount] = useState('');
@@ -12,8 +12,8 @@ export const useWithdrawal = ( account, refetch) => {
   const handleWithdraw = async (withdrawalAmount) => {
     try {
       writeContract({
-        address: CONTRACT_ADDRESS,
-        abi: CONTRACT_ABI,
+        address: YIELD_OPTIMIZER_ADDRESS,
+        abi: YIELD_OPTIMIZER_ABI,
         functionName: 'withdraw',
         args: [parseEther(withdrawalAmount)],
         account: account,

@@ -8,7 +8,7 @@ import { useAddVault } from '@/hooks/useAddVault';
 import { useRemoveVault } from '@/hooks/useRemoveVault';
 
 
-export const VaultManagement = () => {
+VaultManagement = () => {
   const { address, isConnected } = useAccount();
   const isOwner = useOwnerCheck(address)
   const { newVaultAddress, setNewVaultAddress, addVaultWrite, isAddingVault } = useAddVault();
@@ -67,3 +67,5 @@ export const VaultManagement = () => {
     </div>
   );
 };
+
+export default VaultManagement

@@ -3,9 +3,9 @@ const { buildModule } = require("@nomicfoundation/hardhat-ignition/modules");
 const { ethers } = require("ethers");
 
 module.exports = buildModule("EZdefi", (m) => {
-  // Utilisation d'ethers pour manipuler les unités
-  const initialSupply = ethers.parseUnits("10000000", 6);
-  const userAmount = ethers.parseUnits("10000", 6);
+  // Utilisation d'ethers pour manipuler les unités avec 18 décimales (valeur par défaut d'ERC20)
+  const initialSupply = ethers.parseUnits("10000000", 18);
+  const userAmount = ethers.parseUnits("100000", 18); // 100000 tokens avec 18 décimales
   
   // Déploiement du token USDC mintable
   const usdc = m.contract("MintableUSDC", ["USD Coin", "USDC", initialSupply]);
@@ -23,21 +23,41 @@ module.exports = buildModule("EZdefi", (m) => {
   const addMinterCToken = m.call(usdc, "addMinter", [cToken], { id: "minterCompoundUSDC" });
 
   // Configuration des transferts de tokens aux utilisateurs
-  // Nous utilisons getAccount pour récupérer dynamiquement les adresses
-  const user1 = m.getAccount(1); // Le second compte (index 1) sera user1
-  const user2 = m.getAccount(2); // Le troisième compte (index 2) sera user2
+  // Récupération des comptes utilisateurs
+  const user0 = m.getAccount(0); // Ajout de l'utilisateur 0
+  const user1 = m.getAccount(1);
+  const user2 = m.getAccount(2);
 
+  // Transfert à l'utilisateur 0
+  const transferUser0 = m.call(usdc, "transfer", [user0, userAmount], {
+    id: "transfer_user0",
+    after: [addMinterAToken, addMinterCToken],
+  });
+
+  // Transfert à l'utilisateur 1
   const transferUser1 = m.call(usdc, "transfer", [user1, userAmount], {
     id: "transfer_user1",
     after: [addMinterAToken, addMinterCToken],
   });
 
+  // Transfert à l'utilisateur 2
   const transferUser2 = m.call(usdc, "transfer", [user2, userAmount], {
     id: "transfer_user2",
     after: [addMinterAToken, addMinterCToken],
   });
 
   // Approbations pour les opérations
+  const approveUser0 = m.call(
+    usdc,
+    "approve",
+    [yieldOptimizer, userAmount],
+    {
+      id: "approve_user0",
+      from: user0,
+      after: [transferUser0],
+    }
+  );
+
   const approveUser1 = m.call(
     usdc,
     "approve",
@@ -66,8 +86,10 @@ module.exports = buildModule("EZdefi", (m) => {
     aToken,
     cToken,
     yieldOptimizer,
+    transferUser0,
     transferUser1,
     transferUser2,
+    approveUser0,
     approveUser1,
     approveUser2,
   };

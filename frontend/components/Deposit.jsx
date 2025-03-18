@@ -5,7 +5,7 @@ import { Label } from './ui/label';
 import { useAccount } from 'wagmi';
 import { useDeposit } from '@/hooks/useDeposit';
 
-export const Deposit = ({ refetch }) => {
+const Deposit = ({ refetch }) => {
   const { address } = useAccount();
   const { amount, setAmount, handleDeposit, hash, error, isPending, isConfirming, isConfirmed } = useDeposit( address, refetch);
 
@@ -18,10 +18,10 @@ export const Deposit = ({ refetch }) => {
       {error && (
         <div>Error: {error.shortMessage || error.message}</div>
       )}
-      <Label>Amount in ETH</Label>
+      <Label>Amount in USDC</Label>
       <Input
         type='number'
-        placeholder='Amount in ETH...'
+        placeholder='Amount in USDC'
         value={amount}
         onChange={(e) => setAmount(e.target.value)}
       />
@@ -35,3 +35,5 @@ export const Deposit = ({ refetch }) => {
     </div>
   );
 };
+
+export default Deposit

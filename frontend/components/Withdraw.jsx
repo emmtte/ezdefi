@@ -21,7 +21,7 @@ const Withdraw = ({ refetch }) => {
       <Label>Amount in ETH...</Label>
       <Input
         type='number'
-        placeholder='Amount in ETH...'
+        placeholder='Amount in USDC...'
         value={amount}
         onChange={(e) => setAmount(e.target.value)}
       />

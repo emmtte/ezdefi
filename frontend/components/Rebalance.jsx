@@ -6,7 +6,7 @@ import { Label } from './ui/label';
 import { useAccount } from 'wagmi';
 import { useRebalance } from '@/hooks/useRebalance';
 
-export const Rebalance = ({ refetch }) => {
+const Rebalance = ({ refetch }) => {
   const { address } = useAccount();
   const { amount, setAmount, handleRebalance, hash, error, isPending, isConfirming, isConfirmed } = useRebalance( address, refetch);
 
@@ -36,3 +36,5 @@ export const Rebalance = ({ refetch }) => {
     </div>
   );
 };
+
+export default Rebalance

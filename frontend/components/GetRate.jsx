@@ -1,6 +1,6 @@
 import { useGetRate } from '@/hooks/useGetRate';
 
-export const GetRate = () => {
+const GetRate = () => {
   const { interestRate, isLoading, isError, error, refetch } = useGetRate(token);
 
   if (isLoading) {
@@ -18,3 +18,5 @@ export const GetRate = () => {
     </div>
   );
 };
+
+export default GetRate

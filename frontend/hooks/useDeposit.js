@@ -12,8 +12,8 @@ export const useDeposit = (account, refetch) => {
   const handleDeposit = async (depositAmount) => {
     try {
       writeContract({
-        address: CONTRACT_ADDRESS,
-        abi: CONTRACT_ABI,
+        address: YIELD_OPTIMIZER_ADDRESS,
+        abi: YIELD_OPTIMIZER_ABI,
         functionName: 'deposit',
         value: parseEther(depositAmount),
         account: account,
