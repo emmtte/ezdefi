@@ -8,7 +8,7 @@ async function main() {
   
   console.log("Déploiement du token USDC mintable...");
   const MintableUSDC = await ethers.getContractFactory("MintableUSDC");
-  const usdc = await MintableUSDC.deploy("USD Coin", "USDC", ethers.parseUnits("10000000", 6));
+  const usdc = await MintableUSDC.deploy("USD Coin", "USDC", ethers.parseUnits("10000000", 18));
   console.log(`MintableUSDC déployé à: ${await usdc.getAddress()}`);
 
   console.log("Déploiement des vaults aToken et cToken...");
@@ -41,6 +41,12 @@ async function main() {
   await aToken.setInterestRate(1000); // 10%
   await cToken.setInterestRate(2000); // 20%
   
+  let test1 = await cToken.getInterestRate();
+  let test2 = await aToken.getInterestRate();
+
+  console.log({test1, test2})
+
+
   // Préparation des vaults
   console.log("Préparation des vaults avec des fonds initiaux...");
   await usdc.approve(await cToken.getAddress(), ethers.parseUnits("1000", 6));

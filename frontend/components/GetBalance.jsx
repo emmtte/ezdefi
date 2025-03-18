@@ -1,3 +1,4 @@
+'use client';
 import React from 'react';
 import { useUsdcBalance } from '@/hooks/useUsdcBalance';
 import { MINTABLE_USDC_ADDRESS } from '@/utils/constants'

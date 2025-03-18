@@ -32,6 +32,9 @@ npm install @aave/core-v3
 
 ## Localhost
 npx hardhat clean
+rm -rf ignition/deployments
+rm -rf ignition/cache
+
 npx hardhat node
 node scripts/test_chain.js
 npx hardhat ignition deploy ignition/modules/EZdefi.js --network localhost
