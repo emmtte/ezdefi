@@ -3,9 +3,9 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from './ui/label';
 import { useAccount } from 'wagmi';
-import useDeposit from '@/hooks/useDeposit'; // Importez le hook
+import { useDeposit } from '@/hooks/useDeposit';
 
-const Deposit = ({ refetch }) => {
+export const Deposit = ({ refetch }) => {
   const { address } = useAccount();
   const { amount, setAmount, handleDeposit, hash, error, isPending, isConfirming, isConfirmed } = useDeposit( address, refetch);
 
@@ -35,5 +35,3 @@ const Deposit = ({ refetch }) => {
     </div>
   );
 };
-
-export default Deposit;

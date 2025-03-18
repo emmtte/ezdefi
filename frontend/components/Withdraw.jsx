@@ -3,7 +3,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { useAccount } from 'wagmi';
-import { useWithdrawal } from '@/hooks';
+import { useWithdrawal } from '@/hooks/useWithdrawal';
 
 const Withdraw = ({ refetch }) => {
   const { address } = useAccount();

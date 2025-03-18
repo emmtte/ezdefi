@@ -4,7 +4,7 @@ import { parseEther } from 'viem';
 import { toast } from 'sonner';
 import { CONTRACT_ADDRESS, CONTRACT_ABI } from '@/utils/constants'
 
-const useWithdrawal = ( account, refetch) => {
+export const useWithdrawal = ( account, refetch) => {
   const [amount, setAmount] = useState('');
   const { data: hash, error, isPending, writeContract } = useWriteContract();
   const { isLoading: isConfirming, isSuccess: isConfirmed } = useWaitForTransactionReceipt({ hash });
@@ -43,5 +43,3 @@ const useWithdrawal = ( account, refetch) => {
     isConfirmed,
   };
 };
-
-export default useWithdrawal;

@@ -1,13 +1,13 @@
 import { useState } from 'react';
-import { useContractWrite } from 'wagmi';
-import { useToast } from '@/components/ui/use-toast';
+import { toast } from "sonner"
+import { YIELD_OPTIMIZER_ADDRESS, YIELD_OPTIMIZER_ABI } from '@/utils/constants'
 
-const useAddVault = (contractAddress, contractABI) => {
+export const useAddVault = () => {
   const [newVaultAddress, setNewVaultAddress] = useState('');
   const { toast } = useToast();
   const { write: addVaultWrite, isSuccess: addVaultSuccess, isLoading: isAddingVault } = useContractWrite({
-    address: contractAddress,
-    abi: contractABI,
+    address: YIELD_OPTIMIZER_ADDRESS,
+    abi: YIELD_OPTIMIZER_ABI,
     functionName: 'addVault',
     args: [newVaultAddress],
     onSuccess: () => {
@@ -33,5 +33,3 @@ const useAddVault = (contractAddress, contractABI) => {
     isAddingVault,
   };
 };
-
-export default useAddVault;

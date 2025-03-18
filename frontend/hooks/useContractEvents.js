@@ -1,23 +1,23 @@
 import { useState, useEffect } from 'react';
 import { parseAbiItem } from 'viem';
 import { publicClient } from '@/utils/client';
-import { CONTRACT_ADDRESS, CONTRACT_ABI } from '@/utils/constants'
+import { YIELD_OPTIMIZER_ADDRESS, YIELD_OPTIMIZER_ABI } from '@/utils/constants'
 
-const useContractEvents = () => {
+export const useContractEvents = () => {
   
-    const [events, setEvents] = useState([]);
+  const [events, setEvents] = useState([]);
 
   const getEvents = async () => {
     try {
       const depositEvents = await publicClient.getLogs({
-        address: CONTRACT_ADDRESS,
+        address: YIELD_OPTIMIZER_ADDRESS,
         event: parseAbiItem('event etherDeposited(address indexed account, uint amount)'),
         fromBlock: 7895383n,
         toBlock: 'latest',
       });
 
       const withdrawEvents = await publicClient.getLogs({
-        address: CONTRACT_ADDRESS,
+        address: YIELD_OPTIMIZER_ADDRESS,
         event: parseAbiItem('event etherWithdrawed(address indexed account, uint amount)'),
         fromBlock: 7895383n,
         toBlock: 'latest',
@@ -44,12 +44,10 @@ const useContractEvents = () => {
   };
 
   useEffect(() => {
-    if (CONTRACT_ADDRESS) {
+    if (YIELD_OPTIMIZER_ADDRESS) {
       getEvents();
     }
-  }, [CONTRACT_ADDRESS]);
+  }, [YIELD_OPTIMIZER_ADDRESS]);
 
   return events;
 };
-
-export default useContractEvents;

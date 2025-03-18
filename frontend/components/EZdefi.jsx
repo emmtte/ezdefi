@@ -5,16 +5,17 @@ import GetBalance from '@/components/GetBalance'
 import Deposit from '@/components/Deposit'
 import Withdraw from '@/components/Withdraw'
 import Rebalance from '@/components/Rebalance';
-import { useOwnerCheck, useContractEvents } from '@/hooks';
+import { useOwnerChecks } from '@/hooks/useOwnerCheck';
+import { useContractEvents } from '@/hooks/useContractEvents';
 import { useReadContract } from 'wagmi';
-import { CONTRACT_ADDRESS, CONTRACT_ABI } from '@/utils/constants'
+import { AAVE_USDC_ADDRESS, COMPOUND_USDC_ADDRESS, AAVE_USDC_ABI, COMPOUND_USDC_ABI,  } from '@/utils/constants'
 import Events from '@/components/Events'
 
-const EZdefi = () => {
+export const EZdefi = () => {
   const { isConnected, address } = useAccount()
   const isOwner = useOwnerCheck(address)
   const events = useContractEvents()
-  const { data: balance, isPending, error, refetch } = useReadContract({ address: CONTRACT_ADDRESS, abi: CONTRACT_ABI, functionName: 'balanceOf', account: address })
+  //const { data: balance, isPending, error, refetch } = useReadContract({ address: CONTRACT_ADDRESS, abi: CONTRACT_ABI, functionName: 'balanceOf', account: address })
 
  
     return (
@@ -26,7 +27,10 @@ const EZdefi = () => {
                 <div>
                 <h1 className='text-2xl font-bold mb-2'>Outils de maintenance</h1>
                 <p>Vous êtes connecté en tant que propriétaire du contrat.</p>
-                <GetBalance balance={balance} isPending={isPending} error={error} />
+                <GetRate address={AAVE_USDC_ADDRESS} abi={AAVE_USDC_ABI} refetch={refetch} />
+                <GetRate address={COMPOUND_USDC_ADDRESS} abi={ COMPOUND_USDC_ABI} refetch={refetch} />
+                <GetBalance/>
+                <GetBalance isLoading={isLoading} error={error} />
                 <Deposit refetch={refetch} events={events} />
                 <Withdraw refetch={refetch} events={events} />
                 <Rebalance refetch={refetch} events={events} />
@@ -51,5 +55,3 @@ const EZdefi = () => {
         </>
     );
     }
-
-export default EZdefi

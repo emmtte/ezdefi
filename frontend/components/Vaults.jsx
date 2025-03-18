@@ -1,52 +1,18 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useAccount, useContractRead } from 'wagmi';
+import { useAccount } from 'wagmi';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { useToast } from '@/components/ui/use-toast';
-import { toast as shadcnToast } from '@/components/ui/toast';
-import { CONTRACT_ADDRESS, CONTRACT_ABI } from '@/utils/constants';
-import useAddVault from '@/hooks/useAddVault';
-import useRemoveVault from '@/hooks/useRemoveVault';
+import { useAddVault } from '@/hooks/useAddVault';
+import { useRemoveVault } from '@/hooks/useRemoveVault';
 
-const VaultManagement = () => {
+
+export const VaultManagement = () => {
   const { address, isConnected } = useAccount();
-  const [isOwner, setIsOwner] = useState(false);
-  const { toast } = useToast();
-
-  const { data: ownerAddress } = useContractRead({
-    address: CONTRACT_ADDRESS,
-    abi: CONTRACT_ABI,
-    functionName: 'owner',
-  });
-
-  const {
-    newVaultAddress,
-    setNewVaultAddress,
-    addVaultWrite,
-    isAddingVault,
-  } = useAddVault(CONTRACT_ADDRESS, CONTRACT_ABI);
-
-  const {
-    removeVaultAddress,
-    setRemoveVaultAddress,
-    removeVaultWrite,
-    isRemovingVault,
-  } = useRemoveVault(CONTRACT_ADDRESS, CONTRACT_ABI);
-
-  useEffect(() => {
-    if (isConnected && ownerAddress && address) {
-      setIsOwner(address.toLowerCase() === ownerAddress?.toLowerCase());
-    } else {
-      setIsOwner(false);
-    }
-  }, [isConnected, ownerAddress, address]);
-
-  if (!isOwner) {
-    return null;
-  }
+  const isOwner = useOwnerCheck(address)
+  const { newVaultAddress, setNewVaultAddress, addVaultWrite, isAddingVault } = useAddVault();
+  const { removeVaultAddress, setRemoveVaultAddress, removeVaultWrite, isRemovingVault } = useRemoveVault();
 
   return (
     <div>
@@ -101,5 +67,3 @@ const VaultManagement = () => {
     </div>
   );
 };
-
-export default VaultManagement;

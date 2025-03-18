@@ -1,13 +1,14 @@
-import { formatEther } from 'viem'
+import React from 'react';
+import { formatEther } from 'viem';
+import { useUsdcBalance } from '@/hooks/useUsdcBalance';
 
-const GetBalance = ({ balance, isPending, error }) => {
+export const GetBalance = ({ address }) => {
+  const { balance, isLoading, isError, error } = useUsdcBalance(address);
   return (
     <div>
-        {isPending && <div>Loading...</div>}
-        {error && <div>Error: {error.shortMessage || error.message}</div>}
-        {balance !== undefined && <div>Balance: {formatEther(balance)} ETH</div>}
+      {isLoading && <div>Loading...</div>}
+      {isError && <div>Error: {error}</div>}
+      {balance !== undefined && <div>Balance: {formatEther(balance)} ETH</div>}
     </div>
-  )
-}
-
-export default GetBalance
+  );
+};

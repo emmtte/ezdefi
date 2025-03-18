@@ -4,23 +4,23 @@ import { parseEther } from 'viem';
 import { toast } from 'sonner';
 import { YIELD_OPTIMIZER_ADDRESS, YIELD_OPTIMIZER_ABI } from '@/utils/constants'
 
-export const useDeposit = (account, refetch) => {
+export const useRebalance = ( account, refetch) => {
   const [amount, setAmount] = useState('');
   const { data: hash, error, isPending, writeContract } = useWriteContract();
   const { isLoading: isConfirming, isSuccess: isConfirmed } = useWaitForTransactionReceipt({ hash });
 
-  const handleDeposit = async (depositAmount) => {
+  const handleRebalance = async (rebalanceAmount) => {
     try {
       writeContract({
-        address: CONTRACT_ADDRESS,
-        abi: CONTRACT_ABI,
-        functionName: 'deposit',
-        value: parseEther(depositAmount),
+        address: YIELD_OPTIMIZER_ADDRESS,
+        abi: YIELD_OPTIMIZER_ABI,
+        functionName: 'withdraw', // Assurez-vous que c'est la bonne fonction pour le rééquilibrage
+        args: [parseEther(rebalanceAmount)],
         account: account,
       });
     } catch (error) {
-      console.error("Erreur lors du dépôt :", error);
-      toast.error(`Erreur lors du dépôt : ${error.shortMessage || error.message}`);
+      console.error("Erreur lors du rééquilibrage :", error);
+      toast.error(`Erreur lors du rééquilibrage : ${error.shortMessage || error.message}`);
     }
   };
 
@@ -35,7 +35,7 @@ export const useDeposit = (account, refetch) => {
   return {
     amount,
     setAmount,
-    handleDeposit,
+    handleRebalance,
     hash,
     error,
     isPending,

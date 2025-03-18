@@ -1,13 +1,13 @@
 import { useState, useEffect } from 'react';
 import { useReadContract } from 'wagmi';
-import { CONTRACT_ADDRESS, CONTRACT_ABI } from '@/utils/constants'
+import { YIELD_OPTIMIZER_ADDRESS, YIELD_OPTIMIZER_ABI } from '@/utils/constants'
 
-const useOwnerCheck = (address) => {
+export const useOwnerCheck = (address) => {
   const [isOwner, setIsOwner] = useState(false);
 
   const { data: ownerAddress, isSuccess: isOwnerAddressSuccess } = useReadContract({
-    address: CONTRACT_ADDRESS,
-    abi: CONTRACT_ABI,
+    address: YIELD_OPTIMIZER_ADDRESS,
+    abi: YIELD_OPTIMIZER_ABI,
     functionName: 'owner',
   });
 
@@ -19,5 +19,3 @@ const useOwnerCheck = (address) => {
 
   return isOwner;
 };
-
-export default useOwnerCheck;

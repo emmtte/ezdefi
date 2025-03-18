@@ -2,7 +2,7 @@ import React from 'react'
 import { formatEther } from 'viem'
 import { Badge } from './ui/badge'
 
-const Events = ({ events }) => {
+export const Events = ({ events }) => {
   return (
     <div className='mt-10'>
         <h2 className='text-2xl font-bold mb-2'>Events</h2>
@@ -35,5 +35,3 @@ const Events = ({ events }) => {
     </div>    
   )
 }
-
-export default Events
