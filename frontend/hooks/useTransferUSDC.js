@@ -1,24 +1,9 @@
 'use client';
 import { useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
 import { parseUnits } from 'viem';
+import { MINTABLE_USDC_ADDRESS, MINTABLE_USDC_ABI } from '@/utils/constants'
 
-// Constantes pour le token USDC
-const USDC_ADDRESS = '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48';
-const USDC_ABI = [
-  {
-    "inputs": [
-      { "name": "to", "type": "address" },
-      { "name": "amount", "type": "uint256" }
-    ],
-    "name": "transfer",
-    "outputs": [{ "name": "", "type": "bool" }],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  }
-];
-const USDC_DECIMALS = 6;
-
-export const useTransferUSDC = ({ refetch }) => {
+export const useTransferUSDC = () => {
   const { data: hash, error, isPending, writeContract } = useWriteContract();
   const { isLoading, isSuccess } = useWaitForTransactionReceipt({ hash });
 
@@ -29,11 +14,11 @@ export const useTransferUSDC = ({ refetch }) => {
     }
 
     try {
-      const parsedAmount = parseUnits(amount.toString(), USDC_DECIMALS);
+      const parsedAmount = parseUnits(amount.toString(), 18);
       
       writeContract({
-        address: USDC_ADDRESS,
-        abi: USDC_ABI,
+        address: MINTABLE_USDC_ADDRESS,
+        abi: MINTABLE_USDC_ABI,
         functionName: 'transfer',
         args: [recipient, parsedAmount],
       });
