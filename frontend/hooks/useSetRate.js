@@ -18,7 +18,7 @@ export const useSetRate = ({ token, refetch }) => {
         if (isNaN(newRate) || newRate <= 0) { console.error("Taux invalide"); return; }
         const { address, abi } = getContractDetails();
         if (!address || !abi) { console.error("Token non reconnu ou détails du contrat manquants."); return; }
-
+        newRate = newRate * 1000
         try {
             writeContract({ address, abi, functionName: 'setInterestRate', args: [newRate], });
         } catch (error) {

@@ -2,7 +2,7 @@
 import { useGetRate } from '@/hooks/useGetRate';
 
 const GetRate = ({token}) => {
-  const { interestRate: rate, isLoading, isError, error, refetch } = useGetRate({token});
+  const { rate, isLoading, isError, error, refetch } = useGetRate({token});
 
   if (isLoading) {
     return <p>Chargement du taux d'intérêt...</p>;
@@ -14,8 +14,8 @@ const GetRate = ({token}) => {
 
   return (
     <div>
-      <p>Taux d'intérêt actuel : {String(rate)}%</p>
-      <button onClick={refetch}>Rafraîchir le taux d'intérêt</button>
+      <p>Taux d'intérêt actuel : {rate}%</p>
+      {/*<button onClick={refetch}>Rafraîchir le taux d'intérêt</button>*/}
     </div>
   );
 };

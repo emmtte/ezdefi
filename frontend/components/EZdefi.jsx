@@ -8,6 +8,7 @@ import Rebalance from '@/components/Rebalance';
 import SetRate from '@/components/SetRate';
 import GetRate from '@/components/GetRate';
 import Events from '@/components/Events';
+import TransferUSDC from '@/components/TransferUSDC';
 import { useOwnerCheck } from '@/hooks/useOwnerCheck';
 import { useContractEvents } from '@/hooks/useContractEvents';
 
@@ -35,6 +36,7 @@ const EZdefi = () => {
                     <li> <GetRate token='aToken'/> <SetRate token='aToken'/> </li>
                     <li> <GetRate token='cToken'/> <SetRate token='cToken'/> </li>
                 </ul>
+                <TransferUSDC />
                 <Deposit/>
                 <Withdraw />
                 <Rebalance />

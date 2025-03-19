@@ -28,10 +28,10 @@ export const useGetRate = ({ token }) => {
   console.log("  Is Loading:", isLoading);
   console.log("  Is Error:", isError);
   console.log("  Error:", error);
-
+  const rate = (Number(data) / 1000).toString();
 
   return {
-    rate: data ? data.toString() : null, // Convertit le BigInt en string
+    rate,
     isError,
     isLoading,
     refetch,
