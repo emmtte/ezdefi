@@ -241,7 +241,7 @@ describe("YieldOptimizer (ezToken) Tests", function () {
         // First deposit should get exact 1:1 ratio
         expect(initialShares).to.equal(amount);
       });
-      
+      /*
       it.skip("Devrait gérer les conversions avec totalAssets = 0", async function () {
         // No deposits yet, totalAssets = 0
         expect(await aToken.totalAssets()).to.equal(0);
@@ -254,6 +254,7 @@ describe("YieldOptimizer (ezToken) Tests", function () {
         const assetsFromShares = await aToken.convertToAssets(mintAmount);
         expect(assetsFromShares).to.equal(0);
       });
+*/
     });
     
     describe("Complete Deposit/Withdrawal Cycle", function () {
