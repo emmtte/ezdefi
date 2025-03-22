@@ -35,19 +35,37 @@ rm -rf ignition/deployments
 rm -rf ignition/cache
 ```
 
-## Tests, deploiment et coverage
+## Deploy
 ```
 node scripts/test_chain.js
 npx hardhat ignition deploy ignition/modules/EZdefi.js --network localhost
-npx hardhat test test/EZdefi.js 
+```
+
+## Scripts
+```
+npx hardhat run scripts/aToken.js --network localhost
+npx hardhat run scripts/cToken.js --network localhost
+npx hardhat run scripts/ezToken.js --network localhost
+```
+
+## Test et coverage
+```
+npx hardhat test test/EzTest.js 
 npx hardhat coverage --config hardhat.config.default.js
 ```
 
-//pour tester le contrat avec un script
-npx hardhat run scripts/tests_storage.js --network localhost
+```
 
-npx hardhat test test/voting.ts
-npx hardhat coverage test/voting.ts //a mettre dans le readme
+
+npx hardhat test test/ezTest.js
+avant de lancer le coverage : 
+
+modifier hardhat.config.js
+require("@nomicfoundation/hardhat-toolbox");
+module.exports = { solidity: "0.8.28" };
+
+npx hardhat coverage test/ezTest.js
+```
 
 # React
 ## Installation
@@ -66,4 +84,14 @@ npm run dev
 ``` 
 npm run build
 npm intall pretty pino
+```
+
+## A rendre
+```
+30 minutes:
+-présentation brève du projet
+-lancement commande test coverage en live (80% mini)
+-déploiement smart contracts sur testnet en live
+-démo dapp sur testnet ou localhost en live
+et les 20 min de questions du jury.
 ```

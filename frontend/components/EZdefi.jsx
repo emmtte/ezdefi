@@ -13,7 +13,6 @@ import { useOwnerCheck } from '@/hooks/useOwnerCheck';
 import { useContractEvents } from '@/hooks/useContractEvents';
 import { AAVE_USDC_ADDRESS, COMPOUND_USDC_ADDRESS } from '@/utils/constants';
 
-
 const EZdefi = () => {
   const { isConnected, address } = useAccount();
   const isOwner = useOwnerCheck(address);
@@ -51,10 +50,29 @@ const EZdefi = () => {
   const AdminInterface = () => (
     <>
       <div className="bg-blue-50 p-3 rounded-lg mb-3">
-        <h1 className="text-2xl font-bold">Outils de maintenance</h1>
+        <h1 className="text-2xl font-bold">Outils pour l'administrateur du contrat</h1>
         <p>Vous êtes connecté en tant que propriétaire du contrat.</p>
       </div>
-      
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-y-3 gap-x-0">
+        <div>
+          <Vaults/>
+        </div>
+        <div className="md:col-span-3">
+          <Events />
+        </div>
+      </div>
+    </>
+  );
+
+
+  const TestInterface = () => (
+    <>
+      <div className="bg-yellow-50 p-3 rounded-lg mb-3">
+        <h1 className="text-2xl font-bold">Outils de tests des contrats</h1>
+        <p>Vous êtes connecté en tant que propriétaire du contrat.</p>
+      </div>
+
       <div className="grid grid-cols-1 md:grid-cols-3 gap-y-3 gap-x-0">
         <div>
           <Rate name="A" address={AAVE_USDC_ADDRESS} />
@@ -78,15 +96,21 @@ const EZdefi = () => {
       <TabsList className="mb-3">
         <TabsTrigger value="user">Interface utilisateur</TabsTrigger>
         <TabsTrigger value="admin">Outils administrateur</TabsTrigger>
+        <TabsTrigger value="test">Outils de tests</TabsTrigger>
       </TabsList>
-      
+
       <TabsContent value="user">
         <UserInterface />
       </TabsContent>
-      
+
       <TabsContent value="admin">
         <AdminInterface />
       </TabsContent>
+
+      <TabsContent value="test">
+        <TestInterface />
+      </TabsContent>
+
     </Tabs>
   );
 

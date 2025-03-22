@@ -2,14 +2,15 @@
 pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/interfaces/IERC4626.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
+interface Vault is IERC4626 {
+    function getInterestRate() external view returns (uint256);
+}
+
 contract YieldOptimizer is ERC20, Ownable {
-    using SafeERC20 for IERC20;
-    
     IERC20 public immutable asset;
     address[] public allowedVaults;
     address public currentVault;
@@ -33,7 +34,7 @@ contract YieldOptimizer is ERC20, Ownable {
 
     function deposit(uint256 amount) external returns (uint256 shares) {
         require(amount > 0, "Amount must be greater than 0");
-        asset.safeTransferFrom(msg.sender, address(this), amount);
+        require(asset.transferFrom(msg.sender, address(this), amount), "Transfer failed");
         if (currentVault == address(0)) {
             currentVault = findBestVault();
         }
@@ -57,11 +58,12 @@ contract YieldOptimizer is ERC20, Ownable {
         if (currentBalance < amount) {
             _withdrawSomeFromCurrent(amount - currentBalance);
         }
-        asset.safeTransfer(msg.sender, amount);
+        require(asset.transfer(msg.sender, amount), "Transfer failed");
         emit Withdrawn(msg.sender, amount, shares);
         return amount;
     }
 
+    // Le reste des fonctions reste identique...
     function totalAssets() public view returns (uint256) {
         uint256 total = asset.balanceOf(address(this));
         if (currentVault != address(0)) {
@@ -95,18 +97,23 @@ contract YieldOptimizer is ERC20, Ownable {
         lastRebalance = block.timestamp;
     }
 
+
+    // Puis dans votre fonction findBestVault, utilisez cette interface
     function findBestVault() public view returns (address best) {
-        uint256 highestRate;
+        uint256 highestRate = 0;
         for (uint i = 0; i < allowedVaults.length; i++) {
-            IERC4626 vault = IERC4626(allowedVaults[i]);
-            uint256 rate = vault.previewDeposit(1e6);
+            Vault vault = Vault(allowedVaults[i]);
+            uint256 rate = vault.getInterestRate();
             if (rate > highestRate) {
                 highestRate = rate;
                 best = allowedVaults[i];
             }
         }
         require(best != address(0), "No vaults available");
+        return best;
     }
+
+
 
     function _withdrawFromCurrent() internal {
         if (currentVault != address(0)) {
@@ -134,7 +141,7 @@ contract YieldOptimizer is ERC20, Ownable {
 
     function _addVault(address vault) internal {
         allowedVaults.push(vault);
-        asset.approve(vault, type(uint256).max);
+        require(asset.approve(vault, type(uint256).max), "Approve failed");
         emit VaultAdded(vault);
     }
 

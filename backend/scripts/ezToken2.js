@@ -159,6 +159,61 @@ async function main() {
   console.log(`Valeur d'une share user1: ${ethers.formatUnits(await yieldOptimizer.totalAssets() * ethers.parseUnits("1", 18) / await yieldOptimizer.totalSupply(), 6)} USDC`);
   
   console.log("\n=== Test terminé avec succès ===");
+
+  // Tests pour la fonction findBestVault
+console.log("\n=== Tests de la fonction findBestVault ===");
+
+// Test 1: Verification du vault initial avec les taux actuels
+console.log("Test 1: Vérification du meilleur vault avec les taux actuels");
+const bestVault1 = await yieldOptimizer.findBestVault();
+console.log(`Le meilleur vault détecté est: ${bestVault1}`);
+console.log(`Le vault actuel est: ${await yieldOptimizer.currentVault()}`);
+console.log(`Les deux doivent correspondre: ${bestVault1 === await yieldOptimizer.currentVault() ? 'OK' : 'ERREUR'}`);
+
+// Test 2: Changement des taux d'intérêt et vérification de la mise à jour
+console.log("\nTest 2: Changement des taux et vérification de la mise à jour");
+await aToken.setInterestRate(4000); // 40%
+await cToken.setInterestRate(2000); // 20%
+const bestVault2 = await yieldOptimizer.findBestVault();
+console.log(`Taux aToken: 40%, Taux cToken: 20%`);
+console.log(`Le meilleur vault détecté est: ${bestVault2}`);
+console.log(`Doit être aToken (${await aToken.getAddress()}): ${bestVault2 === await aToken.getAddress() ? 'OK' : 'ERREUR'}`);
+
+// Test 3: Inversion des taux
+console.log("\nTest 3: Inversion des taux");
+await aToken.setInterestRate(1000); // 10%
+await cToken.setInterestRate(5000); // 50%
+const bestVault3 = await yieldOptimizer.findBestVault();
+console.log(`Taux aToken: 10%, Taux cToken: 50%`);
+console.log(`Le meilleur vault détecté est: ${bestVault3}`);
+console.log(`Doit être cToken (${await cToken.getAddress()}): ${bestVault3 === await cToken.getAddress() ? 'OK' : 'ERREUR'}`);
+
+// Test 4: Taux égaux (en cas d'égalité, le premier vault dans la liste devrait être sélectionné)
+console.log("\nTest 4: Taux égaux");
+await aToken.setInterestRate(3000); // 30%
+await cToken.setInterestRate(3000); // 30%
+const bestVault4 = await yieldOptimizer.findBestVault();
+console.log(`Taux aToken: 30%, Taux cToken: 30%`);
+console.log(`Le meilleur vault détecté est: ${bestVault4}`);
+console.log(`En cas d'égalité, le premier vault (${await aToken.getAddress()}) devrait être choisi: ${bestVault4 === await aToken.getAddress() ? 'OK' : 'ERREUR'}`);
+
+// Test 5: Vérification avec rebalancement
+console.log("\nTest 5: Vérification avec rebalancement");
+await aToken.setInterestRate(6000); // 60%
+await cToken.setInterestRate(2000); // 20%
+console.log(`Taux aToken: 60%, Taux cToken: 20%`);
+console.log(`Avant rebalancement, le vault actuel est: ${await yieldOptimizer.currentVault()}`);
+console.log(`Le meilleur vault détecté est: ${await yieldOptimizer.findBestVault()}`);
+await yieldOptimizer.rebalance();
+console.log(`Après rebalancement, le vault actuel est: ${await yieldOptimizer.currentVault()}`);
+console.log(`Doit être aToken (${await aToken.getAddress()}): ${await yieldOptimizer.currentVault() === await aToken.getAddress() ? 'OK' : 'ERREUR'}`);
+
+// Restaurer les taux pour éviter d'interférer avec les tests suivants
+await aToken.setInterestRate(1000); // 10%
+await cToken.setInterestRate(3500); // 35%
+
+
+
 }
 
 main()
