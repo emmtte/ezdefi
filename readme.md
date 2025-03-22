@@ -50,7 +50,7 @@ npx hardhat run scripts/ezToken.js --network localhost
 
 ## Test et coverage
 ```
-npx hardhat test test/EzTest.js 
+npx hardhat test test/ez.js
 npx hardhat coverage --config hardhat.config.default.js
 ```
 
