@@ -1,6 +1,5 @@
 import { useReadContract } from 'wagmi';
 import { formatEther } from 'viem';
-import { MINTABLE_USDC_ADDRESS, MINTABLE_USDC_ABI } from '@/utils/constants'
 
 export const useBalanceOf = ({address, abi, user}) => {
     const { data, isLoading, isError, error, refetch } = useReadContract({

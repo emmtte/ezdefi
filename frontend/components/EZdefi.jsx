@@ -9,6 +9,7 @@ import Events from '@/components/Events';
 import USDC from '@/components/USDC';
 import Rate from '@/components/Rate';
 import Vaults from '@/components/Vaults';
+import BalanceUSDC from '@/components/BalanceUSDC';
 import { useOwnerCheck } from '@/hooks/useOwnerCheck';
 import { useContractEvents } from '@/hooks/useContractEvents';
 import { AAVE_USDC_ADDRESS, COMPOUND_USDC_ADDRESS } from '@/utils/constants';
@@ -31,6 +32,9 @@ const EZdefi = () => {
   // Interface utilisateur standard avec seulement les composants utilisateur
   const UserInterface = () => (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-y-3 gap-x-0">
+      <div>
+       <BalanceUSDC />
+      </div>
       <div>
         <Deposit />
       </div>

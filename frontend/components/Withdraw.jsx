@@ -4,104 +4,84 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { useAccount } from 'wagmi';
-import { useWithdrawal } from '@/hooks/useWithdrawal';
+import { useWithdraw } from '@/hooks/useWithdraw';
+import { useBalanceOf } from '@/hooks/useBalanceOf';
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/components/ui/card";
 import { toast } from "sonner";
+import { YIELD_OPTIMIZER_ADDRESS, YIELD_OPTIMIZER_ABI, MINTABLE_USDC_ADDRESS, MINTABLE_USDC_ABI } from '@/utils/constants'
 
-// Hook personnalisé pour récupérer le montant disponible à retirer
-const useWithdrawableAmount = (address) => {
-  const [withdrawableAmount, setWithdrawableAmount] = useState(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState(null);
-
-  const fetchWithdrawableAmount = async () => {
-    if (!address) return;
-    
-    setIsLoading(true);
-    try {
-      // Remplacez cette partie par votre logique réelle pour obtenir le montant retirable
-      // Exemple avec un appel à un contrat via wagmi
-      // const data = await readContract({
-      //   address: contractAddress,
-      //   abi: contractAbi,
-      //   functionName: 'balanceOf',
-      //   args: [address],
-      // });
-      // const formattedAmount = formatUnits(data, 6); // Pour USDC qui a 6 décimales
-      
-      // Simulation pour l'exemple
-      const mockData = "250"; // Montant fictif
-      setWithdrawableAmount(mockData);
-    } catch (err) {
-      setError(err);
-      console.error("Failed to fetch withdrawable amount:", err);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchWithdrawableAmount();
-  }, [address]);
-
-  return { withdrawableAmount, isLoading, error, refetch: fetchWithdrawableAmount };
-};
-
-const Withdraw = ({ refetch: parentRefetch }) => {
+const Withdraw = () => {
   const { address } = useAccount();
-  const [amount, setAmount] = useState('');
-  
-  // Je suppose que votre hook useWithdrawal a une structure similaire à useDeposit
-  const { handleWithdraw, hash, error, isPending, isConfirming, isConfirmed } = useWithdrawal(address, () => {
-    parentRefetch?.();
-    refetchWithdrawable();
+  const { amount, setAmount, handleWithdraw, hash, error, isPending, isLoading, isSuccess } = useWithdraw(address, () => {
+    refetchBalance();
+    refetchDeposited();
   });
   
-  const { withdrawableAmount, isLoading: withdrawableLoading, error: withdrawableError, refetch: refetchWithdrawable } = useWithdrawableAmount(address);
+  const { balance: usdcBalance, isLoading: balanceLoading, refetch: refetchBalance } = useBalanceOf({ address: MINTABLE_USDC_ADDRESS, abi: MINTABLE_USDC_ABI, user: address });
+  const { balance: depositedAmount, isLoading: depositedLoading, isError: depositedError, error: depositedErrorData, refetch: refetchDeposited } = useBalanceOf({ address: YIELD_OPTIMIZER_ADDRESS, abi: YIELD_OPTIMIZER_ABI, user: address });
 
   useEffect(() => {
-    if (isConfirmed) {
+    if (isSuccess) {
       toast("Retrait effectué avec succès!");
       setAmount('');
+      refetchBalance();
+      refetchDeposited();
     }
-  }, [isConfirmed]);
+  }, [isSuccess, setAmount, refetchBalance, refetchDeposited]);
 
   return (
     <Card className="w-full max-w-md mx-auto">
       <CardHeader>
         <CardTitle>Retrait USDC</CardTitle>
         <div className="space-y-2 mt-2">
-          <div className="text-sm">
-            {withdrawableLoading ? (
-              <span>Chargement du montant disponible...</span>
-            ) : withdrawableError ? (
-              <span className="text-red-500">Erreur: {withdrawableError?.message}</span>
+          {/* Solde disponible */}
+          <div className="flex items-center text-sm">
+            <span className="font-medium">Solde disponible: </span>
+            <span className="ml-1 font-semibold text-green-600">
+              {balanceLoading ? "Chargement..." : `${usdcBalance || '0'} USDC`}
+            </span>
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className="ml-2 h-6 px-2" 
+              onClick={refetchBalance}
+            >
+              ↻
+            </Button>
+          </div>
+          
+          {/* Montant déjà déposé */}
+          <div className="flex items-center text-sm">
+            <span className="font-medium">Déjà déposé: </span>
+            {depositedLoading ? (
+              <span className="ml-1">Chargement...</span>
+            ) : depositedError ? (
+              <span className="ml-1 text-red-500">Erreur de chargement</span>
             ) : (
-              <div className="flex items-center">
-                <span className="font-medium">Disponible au retrait: </span>
-                <span className="ml-1 font-semibold text-green-600">{withdrawableAmount || '0'} USDC</span>
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  className="ml-2 h-6 px-2" 
-                  onClick={refetchWithdrawable}
-                >
-                  ↻
-                </Button>
-              </div>
+              <span className="ml-1 font-semibold text-blue-600">{depositedAmount || '0'} USDC</span>
             )}
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className="ml-2 h-6 px-2" 
+              onClick={refetchDeposited}
+            >
+              ↻
+            </Button>
           </div>
         </div>
       </CardHeader>
       
       <CardContent className="space-y-4">
+        {/* Informations sur la transaction */}
         {hash && <div className="text-sm break-all">Transaction Hash: {hash}</div>}
-        {isConfirming && <div className="text-sm text-blue-500">En attente de confirmation...</div>}
-        {isConfirmed && <div className="text-sm text-green-500">Transaction confirmée.</div>}
+        {isLoading && <div className="text-sm text-blue-500">En attente de confirmation...</div>}
+        {isSuccess && <div className="text-sm text-green-500">Transaction confirmée.</div>}
         {error && (
           <div className="text-sm text-red-500">Erreur: {error.shortMessage || error.message}</div>
         )}
         
+        {/* Champ de saisie du montant */}
         <div className="space-y-2">
           <Label htmlFor="withdraw-amount">Montant à retirer (USDC)</Label>
           <div className="flex space-x-2">
@@ -113,15 +93,15 @@ const Withdraw = ({ refetch: parentRefetch }) => {
               onChange={(e) => setAmount(e.target.value)}
               min="0"
               step="1"
-              disabled={isPending || isConfirming}
+              disabled={isPending || isLoading}
             />
-            {withdrawableAmount && (
+            {depositedAmount && (
               <Button 
                 type="button" 
                 variant="outline" 
                 size="sm"
-                onClick={() => setAmount(withdrawableAmount)}
-                disabled={isPending || isConfirming}
+                onClick={() => setAmount(depositedAmount)}
+                disabled={isPending || isLoading}
                 className="whitespace-nowrap"
               >
                 Max
@@ -130,12 +110,13 @@ const Withdraw = ({ refetch: parentRefetch }) => {
           </div>
         </div>
         
+        {/* Bouton de retrait */}
         <Button
           className="w-full"
           onClick={() => handleWithdraw(amount)}
-          disabled={isPending || isConfirming || !amount || Number(amount) <= 0 || Number(amount) > Number(withdrawableAmount)}
+          disabled={isPending || isLoading || !amount || Number(amount) <= 0 || Number(amount) > Number(depositedAmount)}
         >
-          {isPending || isConfirming ? 'Retrait en cours...' : 'Retirer'}
+          {isPending || isLoading ? 'Retrait en cours...' : 'Retirer'}
         </Button>
       </CardContent>
       

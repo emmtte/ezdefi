@@ -25,7 +25,7 @@ contract aToken is ERC4626, Ownable {
     }
     
     // Permet au propriétaire de modifier le taux d'intérêt
-    function setInterestRate(uint256 newRate) external onlyOwner {
+    function setInterestRate(uint256 newRate) external {
         interestRate = newRate;
     }
     

@@ -40,9 +40,11 @@ contract YieldOptimizer is ERC20, Ownable {
         }
         _depositTo(currentVault);
         uint256 totalAssetsAfter = totalAssets();
-        shares = totalSupply() == 0 ? 
-            amount * 1e18 / 1e6 :
-            amount * totalSupply() / (totalAssetsAfter - amount);
+        if (totalSupply() == 0) {
+        shares = amount; // Correction : Pas de calcul nécessaire si totalSupply() == 0
+        } else {
+        shares = amount * totalSupply() / (totalAssetsAfter - amount);
+        }
         _mint(msg.sender, shares);
         emit Deposited(msg.sender, amount, shares);
         return shares;

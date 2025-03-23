@@ -25,7 +25,7 @@ npx hardhat init
 ```
 npx hardhat node
 npx hardhat node --fork https://eth-mainnet.g.alchemy.com/v2/VXvc9IbtUntO_27RgSW1xxOvNIpZh5zV
-npx hardhat ignition deploy ignition/modules/EZdefi.js --network localhost
+npx hardhat ignition deploy ignition/modules/ezdefi.js --network localhost
 ```
 
 ## Nettoyage
@@ -38,7 +38,8 @@ rm -rf ignition/cache
 ## Deploy
 ```
 node scripts/test_chain.js
-npx hardhat ignition deploy ignition/modules/EZdefi.js --network localhost
+npx hardhat ignition deploy ignition/modules/ezdefi.js --network localhost
+npx hardhat ignition deploy ignition/modules/ezdefi.js --network sepolia
 ```
 
 ## Scripts
@@ -64,7 +65,7 @@ modifier hardhat.config.js
 require("@nomicfoundation/hardhat-toolbox");
 module.exports = { solidity: "0.8.28" };
 
-npx hardhat coverage test/ezTest.js
+npx hardhat coverage
 ```
 
 # React
