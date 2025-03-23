@@ -70,6 +70,7 @@ npx hardhat coverage test/ezTest.js
 # React
 ## Installation
 ```
+npm install pino-pretty
 npx create-next-app@14 . # Ne pas oublier le point
 => No/Yes/Yes/No/Yes/No
 npm install @rainbow-me/rainbowkit wagmi viem@2.x @tanstack/react-query

@@ -14,7 +14,7 @@ const Events = () => {
 
   return (
     <div>
-      <h2>Logs de l'événement etherDeposited</h2>
+      <h2>{`Logs de l'événement etherDeposited`}</h2>
       {depositLogs.length === 0 ? (
         <p>{`Aucun log trouvé.`}</p>
       ) : (

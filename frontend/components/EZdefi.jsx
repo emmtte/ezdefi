@@ -50,7 +50,7 @@ const EZdefi = () => {
   const AdminInterface = () => (
     <>
       <div className="bg-blue-50 p-3 rounded-lg mb-3">
-        <h1 className="text-2xl font-bold">Outils pour l'administrateur du contrat</h1>
+        <h1 className="text-2xl font-bold">{`Outils pour l'administrateur du contrat`}</h1>
         <p>Vous êtes connecté en tant que propriétaire du contrat.</p>
       </div>
 
