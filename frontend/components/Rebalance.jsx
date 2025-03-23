@@ -161,7 +161,7 @@ const Rebalance = ({ refetch: parentRefetch }) => {
             Le rééquilibrage optimise la distribution de vos actifs entre les aToken et cToken pour maximiser le rendement et minimiser les risques selon les conditions actuelles du marché.
           </p>
           <p className="text-sm text-gray-600 dark:text-gray-400">
-            Cette opération s'effectue automatiquement et peut engendrer des frais de transaction.
+            {`Cette opération s'effectue automatiquement et peut engendrer des frais de transaction.`}
           </p>
         </div>
         

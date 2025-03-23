@@ -16,7 +16,7 @@ const Events = () => {
     <div>
       <h2>Logs de l'événement etherDeposited</h2>
       {depositLogs.length === 0 ? (
-        <p>Aucun log trouvé.</p>
+        <p>{`Aucun log trouvé.`}</p>
       ) : (
         <ul>
           {depositLogs.map((log, index) => (

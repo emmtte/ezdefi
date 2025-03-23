@@ -24,9 +24,9 @@ const Rate = ({ name, address }) => {
     return (
         <Card className="w-full max-w-md mx-auto">
             <CardHeader>
-                <CardTitle>Gestion du taux d'intérêt pour le Vault {name}</CardTitle>
+                <CardTitle>{`Gestion du taux d'intérêt pour le Vault`} {name}</CardTitle>
                 <div className="mt-2">
-                    {rateLoading && <div className="text-sm">Chargement du taux d'intérêt...</div>}
+                    {rateLoading && <div className="text-sm">{`Chargement du taux d'intérêt...`}</div>}
                     {rateError && <div className="text-sm text-red-500">Erreur: {rateErrorMessage?.message}</div>}
                     {currentRate !== undefined && (
                         <div className="flex items-center">
@@ -53,7 +53,7 @@ const Rate = ({ name, address }) => {
                     <div className="text-sm text-red-500">Erreur: {error.shortMessage || error.message}</div>
                 )}
                 <div className="space-y-2">
-                    <Label htmlFor="newRate">Nouveau taux d'intérêt (%)</Label>
+                    <Label htmlFor="newRate">{`Nouveau taux d'intérêt (%)`}</Label>
                     <div className="flex space-x-2">
                         <Input
                             id="newRate"
