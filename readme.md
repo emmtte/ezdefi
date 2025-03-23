@@ -77,6 +77,10 @@ npm install @rainbow-me/rainbowkit wagmi viem@2.x @tanstack/react-query
 => slate
 npx shadcn@latest init (use legacy peer deep)
 npx shadcn@latest add alert badge button card input label tabs
+# cp -r backend/ignition/deployments/chain-31337/artifacts/EZdefi*.json frontend/contracts/
+# cp -r backend/ignition/deployments/chain-31337/deployed_addresses.json frontend/contracts/
+cp -r backend/ignition/deployments/chain-11155111/artifacts/EZdefi*.json frontend/contracts/
+cp -r backend/ignition/deployments/chain-11155111/deployed_addresses.json frontend/contracts/
 npm run dev
 ```
 
