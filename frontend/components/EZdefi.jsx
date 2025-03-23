@@ -8,6 +8,7 @@ import Rebalance from '@/components/Rebalance';
 import Events from '@/components/Events';
 import USDC from '@/components/USDC';
 import Rate from '@/components/Rate';
+import Rate2 from '@/components/Rate2';
 import Vaults from '@/components/Vaults';
 import BalanceUSDC from '@/components/BalanceUSDC';
 import { useOwnerCheck } from '@/hooks/useOwnerCheck';
@@ -79,10 +80,10 @@ const EZdefi = () => {
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-y-3 gap-x-0">
         <div>
-          <Rate name="A" address={AAVE_USDC_ADDRESS} />
+          <Rate2 name="A" address={AAVE_USDC_ADDRESS} />
         </div>
         <div>
-          <Rate name="B" address={COMPOUND_USDC_ADDRESS} />
+          <Rate2 name="B" address={COMPOUND_USDC_ADDRESS} />
         </div>
         <div>
           <USDC address={address} />

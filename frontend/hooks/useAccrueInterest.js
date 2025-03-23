@@ -1,22 +1,20 @@
 import { useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
 import { AAVE_USDC_ABI, AAVE_USDC_ADDRESS, COMPOUND_USDC_ABI, COMPOUND_USDC_ADDRESS } from '@/utils/constants';
 
-export const useSetRate = ({ address }) => {
+export const useAccrueInterest = ({ address }) => {
     const { data: hash, error, isPending, writeContract } = useWriteContract();
     const { isLoading, isSuccess } = useWaitForTransactionReceipt({ hash });
 
-    const handleSetRate = async (newRate) => {
-        if (isNaN(newRate) || newRate <= 0) { console.error("Taux invalide"); return; }
-        newRate = newRate * 1000
+    const handleAccrueInterest = async () => {
         try {
-            writeContract({ address, abi:AAVE_USDC_ABI, functionName: 'setInterestRate', args: [newRate], });
+            writeContract({ address, abi:AAVE_USDC_ABI, functionName: 'accrueInterest' });
         } catch (error) {
-            console.error("Erreur lors de la mise à jour du taux :", error);
+            console.error("Erreur lors de l'ajout des interets :", error);
         }
     };
 
     return {
-        handleSetRate,
+        handleAccrueInterest,
         isPending,
         hash,
         isLoading,
