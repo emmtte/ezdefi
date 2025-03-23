@@ -10,8 +10,6 @@ import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/componen
 const USDCFaucet = ({ address, refetch }) => {
     const { requestFaucet, isPending, hash, isLoading, isSuccess, error } = useFaucet({ refetch });
     const { balance, isLoading: balanceLoading, isError: balanceError, error: balanceErrorMessage, refetch: refetchBalance } = useUsdcBalance({ address });
-    
-    const FAUCET_AMOUNT = 10000;
 
     useEffect(() => {
         if (isSuccess) {
@@ -21,7 +19,7 @@ const USDCFaucet = ({ address, refetch }) => {
     }, [isSuccess, refetchBalance]);
 
     const handleClaimFaucet = () => {
-        requestFaucet(FAUCET_AMOUNT);
+        requestFaucet();
     };
 
     return (
@@ -56,7 +54,7 @@ const USDCFaucet = ({ address, refetch }) => {
                 )}
                 
                 <div className="text-center py-2">
-                    <div className="text-lg font-medium mb-2">Réclamer {FAUCET_AMOUNT} USDC</div>
+                    <div className="text-lg font-medium mb-2">Réclamer 10000 USDC</div>
                     <div className="text-sm text-gray-600 mb-4">
                         Cliquez sur le bouton ci-dessous pour recevoir des USDC de test.
                     </div>

@@ -11,6 +11,7 @@ import Rate from '@/components/Rate';
 import Rate2 from '@/components/Rate2';
 import Vaults from '@/components/Vaults';
 import BalanceUSDC from '@/components/BalanceUSDC';
+import USDCFaucet from '@/components/USDCFaucet';
 import { useOwnerCheck } from '@/hooks/useOwnerCheck';
 import { useContractEvents } from '@/hooks/useContractEvents';
 import { AAVE_USDC_ADDRESS, COMPOUND_USDC_ADDRESS } from '@/utils/constants';
@@ -34,9 +35,6 @@ const EZdefi = () => {
   const UserInterface = () => (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-y-3 gap-x-0">
       <div>
-       <BalanceUSDC />
-      </div>
-      <div>
         <Deposit />
       </div>
       <div>
@@ -58,10 +56,12 @@ const EZdefi = () => {
         <h1 className="text-2xl font-bold">{`Outils pour l'administrateur du contrat`}</h1>
         <p>Vous êtes connecté en tant que propriétaire du contrat.</p>
       </div>
-
       <div className="grid grid-cols-1 md:grid-cols-3 gap-y-3 gap-x-0">
         <div>
           <Vaults/>
+        </div>
+        <div>
+          <USDC address={address} />
         </div>
         <div className="md:col-span-3">
           <Events />
@@ -75,7 +75,7 @@ const EZdefi = () => {
     <>
       <div className="bg-yellow-50 p-3 rounded-lg mb-3">
         <h1 className="text-2xl font-bold">Outils de tests des contrats</h1>
-        <p>Vous êtes connecté en tant que propriétaire du contrat.</p>
+        <p></p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-y-3 gap-x-0">
@@ -86,7 +86,7 @@ const EZdefi = () => {
           <Rate2 name="B" address={COMPOUND_USDC_ADDRESS} />
         </div>
         <div>
-          <USDC address={address} />
+          <USDCFaucet address={address} />
         </div>
         <div className="md:col-span-3">
           <Events />
@@ -119,7 +119,26 @@ const EZdefi = () => {
     </Tabs>
   );
 
-  return isOwner ? <OwnerInterface /> : <UserInterface />;
+
+  const Interface = () => (
+    <Tabs defaultValue="user" className="w-full">
+      <TabsList className="mb-3">
+        <TabsTrigger value="user">Interface utilisateur</TabsTrigger>
+        <TabsTrigger value="test">Outils de tests</TabsTrigger>
+      </TabsList>
+
+      <TabsContent value="user">
+        <UserInterface />
+      </TabsContent>
+
+      <TabsContent value="test">
+        <TestInterface />
+      </TabsContent>
+
+    </Tabs>
+  );
+
+  return isOwner ? <OwnerInterface /> : <Interface />;
 };
 
 export default EZdefi;
