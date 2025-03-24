@@ -110,10 +110,10 @@ const Deposit2 = () => {
 
         {/* Informations sur la transaction d'approbation */}
         {approveHash && <div className="text-sm break-all">Transaction Hash (Approbation): {approveHash}</div>}
-        {isApproveLoading && <div className="text-sm text-blue-500">En attente de confirmation de l'approbation...</div>}
-        {isApproveSuccess && <div className="text-sm text-green-500">Transaction d'approbation confirmée.</div>}
+        {isApproveLoading && <div className="text-sm text-blue-500">{`En attente de confirmation de l'approbation...`}</div>}
+        {isApproveSuccess && <div className="text-sm text-green-500">{`Transaction d'approbation confirmée.`}</div>}
         {approveError && (
-          <div className="text-sm text-red-500">Erreur d'approbation: {approveError.shortMessage || approveError.message}</div>
+          <div className="text-sm text-red-500">{`Erreur d'approbation:`} {approveError.shortMessage || approveError.message}</div>
         )}
         
         {/* Champ de saisie du montant */}
