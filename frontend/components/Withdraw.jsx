@@ -58,7 +58,7 @@ const Withdraw = () => {
             ) : depositedError ? (
               <span className="ml-1 text-red-500">Erreur de chargement</span>
             ) : (
-              <span className="ml-1 font-semibold text-blue-600">{depositedAmount || '0'} USDC</span>
+              <span className="ml-1 font-semibold text-blue-600">{depositedAmount || '0'} EZD</span>
             )}
             <Button 
               variant="ghost" 
@@ -83,12 +83,12 @@ const Withdraw = () => {
         
         {/* Champ de saisie du montant */}
         <div className="space-y-2">
-          <Label htmlFor="withdraw-amount">Montant à retirer (USDC)</Label>
+          <Label htmlFor="withdraw-amount">Montant à retirer (EZD)</Label>
           <div className="flex space-x-2">
             <Input
               id="withdraw-amount"
               type="number"
-              placeholder="Montant en USDC"
+              placeholder="Montant en EZD"
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
               min="0"

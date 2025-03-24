@@ -3,6 +3,7 @@ import { useAccount } from 'wagmi';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import Deposit from '@/components/Deposit';
+import Deposit2 from '@/components/Deposit2';
 import Withdraw from '@/components/Withdraw';
 import Rebalance from '@/components/Rebalance';
 import Events from '@/components/Events';
@@ -35,7 +36,7 @@ const EZdefi = () => {
   const UserInterface = () => (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-y-3 gap-x-0">
       <div>
-        <Deposit />
+        <Deposit2 />
       </div>
       <div>
         <Withdraw />
