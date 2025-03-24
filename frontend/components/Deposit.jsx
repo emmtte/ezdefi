@@ -5,124 +5,84 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { useAccount } from 'wagmi';
 import { useDeposit } from '@/hooks/useDeposit';
-import { useUsdcBalance } from '@/hooks/useUsdcBalance';
+import { useBalanceOf } from '@/hooks/useBalanceOf';
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/components/ui/card";
 import { toast } from "sonner";
+import { YIELD_OPTIMIZER_ADDRESS, YIELD_OPTIMIZER_ABI, MINTABLE_USDC_ADDRESS, MINTABLE_USDC_ABI } from '@/utils/constants'
 
-// Hook personnalisé pour récupérer le montant déjà déposé
-const useDepositedAmount = (address) => {
-  const [depositedAmount, setDepositedAmount] = useState(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState(null);
 
-  const fetchDepositedAmount = async () => {
-    if (!address) return;
-    
-    setIsLoading(true);
-    try {
-      // Remplacez cette partie par votre logique réelle pour obtenir le montant déposé
-      // Exemple avec un appel à un contrat via wagmi
-      // const data = await readContract({
-      //   address: contractAddress,
-      //   abi: contractAbi,
-      //   functionName: 'balanceOf',
-      //   args: [address],
-      // });
-      // const formattedAmount = formatUnits(data, 6); // Pour USDC qui a 6 décimales
-      
-      // Simulation pour l'exemple
-      const mockData = "250"; // Montant fictif
-      setDepositedAmount(mockData);
-    } catch (err) {
-      setError(err);
-      console.error("Failed to fetch deposited amount:", err);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchDepositedAmount();
-  }, [address]);
-
-  return { depositedAmount, isLoading, error, refetch: fetchDepositedAmount };
-};
-
-const Deposit = ({ refetch: parentRefetch }) => {
+const Deposit = () => {
   const { address } = useAccount();
-  const { amount, setAmount, handleDeposit, hash, error, isPending, isConfirming, isConfirmed } = useDeposit(address, () => {
-    parentRefetch?.();
+  const { amount, setAmount, handleDeposit, hash, error, isPending, isLoading, isSuccess } = useDeposit(address, () => {
     refetchBalance();
     refetchDeposited();
   });
   
-  const { balance: usdcBalance, isLoading: balanceLoading, isError: balanceError, error: balanceErrorMessage, refetch: refetchBalance } = useUsdcBalance({ address });
-  const { depositedAmount, isLoading: depositedLoading, error: depositedError, refetch: refetchDeposited } = useDepositedAmount(address);
+  const { balance: usdcBalance, isLoading: balanceLoading, refetch: refetchBalance } = useBalanceOf({ address: MINTABLE_USDC_ADDRESS, abi: MINTABLE_USDC_ABI, user: address  });
+  const { balance: depositedAmount, isLoading: depositedLoading, isError: depositedError, error: depositedErrorData, refetch: refetchDeposited } = useBalanceOf({ address: YIELD_OPTIMIZER_ADDRESS, abi:YIELD_OPTIMIZER_ABI, user: address  });
 
   useEffect(() => {
-    if (isConfirmed) {
+    if (isSuccess) {
       toast("Dépôt effectué avec succès!");
       setAmount('');
+      refetchBalance();
+      refetchDeposited();
     }
-  }, [isConfirmed, setAmount]);
+  }, [isSuccess, setAmount, refetchBalance, refetchDeposited]);
 
   return (
     <Card className="w-full max-w-md mx-auto">
       <CardHeader>
         <CardTitle>Dépôt USDC</CardTitle>
         <div className="space-y-2 mt-2">
-          <div className="text-sm">
-            {balanceLoading ? (
-              <span>Chargement du solde disponible...</span>
-            ) : balanceError ? (
-              <span className="text-red-500">Erreur: {balanceErrorMessage?.message}</span>
-            ) : (
-              <div className="flex items-center">
-                <span className="font-medium">Solde disponible: </span>
-                <span className="ml-1 font-semibold text-green-600">{usdcBalance || '0'} USDC</span>
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  className="ml-2 h-6 px-2" 
-                  onClick={refetchBalance}
-                >
-                  ↻
-                </Button>
-              </div>
-            )}
+          {/* Solde disponible */}
+          <div className="flex items-center text-sm">
+            <span className="font-medium">Solde disponible: </span>
+            <span className="ml-1 font-semibold text-green-600">
+              {balanceLoading ? "Chargement..." : `${usdcBalance || '0'} USDC`}
+            </span>
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className="ml-2 h-6 px-2" 
+              onClick={refetchBalance}
+            >
+              ↻
+            </Button>
           </div>
           
-          <div className="text-sm">
+          {/* Montant déjà déposé */}
+          <div className="flex items-center text-sm">
+            <span className="font-medium">Déjà déposé: </span>
             {depositedLoading ? (
-              <span>Chargement du montant déposé...</span>
+              <span className="ml-1">Chargement...</span>
             ) : depositedError ? (
-              <span className="text-red-500">Erreur: {depositedError?.message}</span>
+              <span className="ml-1 text-red-500">Erreur de chargement</span>
             ) : (
-              <div className="flex items-center">
-                <span className="font-medium">Déjà déposé: </span>
-                <span className="ml-1 font-semibold text-blue-600">{depositedAmount || '0'} USDC</span>
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  className="ml-2 h-6 px-2" 
-                  onClick={refetchDeposited}
-                >
-                  ↻
-                </Button>
-              </div>
+              <span className="ml-1 font-semibold text-blue-600">{depositedAmount || '0'} EZD</span>
             )}
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className="ml-2 h-6 px-2" 
+              onClick={refetchDeposited}
+            >
+              ↻
+            </Button>
           </div>
         </div>
       </CardHeader>
       
       <CardContent className="space-y-4">
+        {/* Informations sur la transaction */}
         {hash && <div className="text-sm break-all">Transaction Hash: {hash}</div>}
-        {isConfirming && <div className="text-sm text-blue-500">En attente de confirmation...</div>}
-        {isConfirmed && <div className="text-sm text-green-500">Transaction confirmée.</div>}
+        {isLoading && <div className="text-sm text-blue-500">En attente de confirmation...</div>}
+        {isSuccess && <div className="text-sm text-green-500">Transaction confirmée.</div>}
         {error && (
           <div className="text-sm text-red-500">Erreur: {error.shortMessage || error.message}</div>
         )}
         
+        {/* Champ de saisie du montant */}
         <div className="space-y-2">
           <Label htmlFor="deposit-amount">Montant à déposer (USDC)</Label>
           <div className="flex space-x-2">
@@ -134,7 +94,7 @@ const Deposit = ({ refetch: parentRefetch }) => {
               onChange={(e) => setAmount(e.target.value)}
               min="0"
               step="1"
-              disabled={isPending || isConfirming}
+              disabled={isPending || isLoading}
             />
             {usdcBalance && (
               <Button 
@@ -142,7 +102,7 @@ const Deposit = ({ refetch: parentRefetch }) => {
                 variant="outline" 
                 size="sm"
                 onClick={() => setAmount(usdcBalance)}
-                disabled={isPending || isConfirming}
+                disabled={isPending || isLoading}
                 className="whitespace-nowrap"
               >
                 Max
@@ -151,12 +111,13 @@ const Deposit = ({ refetch: parentRefetch }) => {
           </div>
         </div>
         
+        {/* Bouton de dépôt */}
         <Button
           className="w-full"
           onClick={() => handleDeposit(amount)}
-          disabled={isPending || isConfirming || !amount || Number(amount) <= 0 || Number(amount) > Number(usdcBalance)}
+          disabled={isPending || isLoading || !amount || Number(amount) <= 0 || Number(amount) > Number(usdcBalance)}
         >
-          {isPending || isConfirming ? 'Dépôt en cours...' : 'Déposer'}
+          {isPending || isLoading ? 'Dépôt en cours...' : 'Déposer'}
         </Button>
       </CardContent>
       

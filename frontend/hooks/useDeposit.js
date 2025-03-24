@@ -4,10 +4,10 @@ import { parseEther } from 'viem';
 import { toast } from 'sonner';
 import { YIELD_OPTIMIZER_ADDRESS, YIELD_OPTIMIZER_ABI } from '@/utils/constants'
 
-export const useDeposit = (account, refetch) => {
+export const useDeposit = (account) => {
   const [amount, setAmount] = useState('');
   const { data: hash, error, isPending, writeContract } = useWriteContract();
-  const { isLoading: isConfirming, isSuccess: isConfirmed } = useWaitForTransactionReceipt({ hash });
+  const { isLoading, isSuccess } = useWaitForTransactionReceipt({ hash });
 
   const handleDeposit = async (depositAmount) => {
     try {
@@ -15,7 +15,7 @@ export const useDeposit = (account, refetch) => {
         address: YIELD_OPTIMIZER_ADDRESS,
         abi: YIELD_OPTIMIZER_ABI,
         functionName: 'deposit',
-        value: parseEther(depositAmount),
+        args: [parseEther(depositAmount)],
         account: account,
       });
     } catch (error) {
@@ -24,14 +24,6 @@ export const useDeposit = (account, refetch) => {
     }
   };
 
-  useEffect(() => {
-    if (isConfirmed) {
-      toast.success("Transaction successful.");
-      setAmount('');
-      refetch();
-    }
-  }, [isConfirmed, refetch]);
-
   return {
     amount,
     setAmount,
@@ -39,7 +31,7 @@ export const useDeposit = (account, refetch) => {
     hash,
     error,
     isPending,
-    isConfirming,
-    isConfirmed,
+    isLoading,
+    isSuccess,
   };
 };

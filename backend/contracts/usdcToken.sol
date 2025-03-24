@@ -27,4 +27,8 @@ contract MintableUSDC is ERC20, Ownable {
         require(minters[msg.sender] || msg.sender == owner(), "Not authorized to mint");
         _mint(to, amount);
     }
+
+    function faucet() external {
+        _mint(msg.sender, 10000 * 10**18 );
+    }
 }

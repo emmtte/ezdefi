@@ -2,14 +2,15 @@
 pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/interfaces/IERC4626.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
+interface Vault is IERC4626 {
+    function getInterestRate() external view returns (uint256);
+}
+
 contract YieldOptimizer is ERC20, Ownable {
-    using SafeERC20 for IERC20;
-    
     IERC20 public immutable asset;
     address[] public allowedVaults;
     address public currentVault;
@@ -31,62 +32,40 @@ contract YieldOptimizer is ERC20, Ownable {
         }
     }
 
-    // Allow users to deposit assets and receive shares
     function deposit(uint256 amount) external returns (uint256 shares) {
         require(amount > 0, "Amount must be greater than 0");
-        
-        // Transfer assets from user to this contract
-        asset.safeTransferFrom(msg.sender, address(this), amount);
-        
-        // If this is our first deposit, select the best vault
+        require(asset.transferFrom(msg.sender, address(this), amount), "Transfer failed");
         if (currentVault == address(0)) {
-            currentVault = _findBestVault();
+            currentVault = findBestVault();
         }
-        
-        // Deposit assets to the current best vault
         _depositTo(currentVault);
-        
-        // Calculate shares to mint
         uint256 totalAssetsAfter = totalAssets();
         shares = totalSupply() == 0 ? 
-            amount * 1e18 / 1e6 :  // Initial exchange rate (considering decimal differences)
+            amount * 1e18 / 1e6 :
             amount * totalSupply() / (totalAssetsAfter - amount);
-        
-        // Mint shares to the user
         _mint(msg.sender, shares);
-        
         emit Deposited(msg.sender, amount, shares);
         return shares;
     }
     
-    // Allow users to withdraw their assets
     function withdraw(uint256 shares) external returns (uint256 amount) {
         require(shares > 0, "Shares must be greater than 0");
         require(balanceOf(msg.sender) >= shares, "Insufficient shares");
-        
         uint256 totalAssetsBefore = totalAssets();
         amount = shares * totalAssetsBefore / totalSupply();
-        
-        // Burn shares
         _burn(msg.sender, shares);
-        
-        // Ensure we have enough assets in the contract
         uint256 currentBalance = asset.balanceOf(address(this));
         if (currentBalance < amount) {
             _withdrawSomeFromCurrent(amount - currentBalance);
         }
-        
-        // Transfer assets to user
-        asset.safeTransfer(msg.sender, amount);
-        
+        require(asset.transfer(msg.sender, amount), "Transfer failed");
         emit Withdrawn(msg.sender, amount, shares);
         return amount;
     }
 
-    // Calculate total assets across all vaults and in this contract
+    // Le reste des fonctions reste identique...
     function totalAssets() public view returns (uint256) {
         uint256 total = asset.balanceOf(address(this));
-        
         if (currentVault != address(0)) {
             IERC4626 vault = IERC4626(currentVault);
             uint256 shares = vault.balanceOf(address(this));
@@ -94,7 +73,6 @@ contract YieldOptimizer is ERC20, Ownable {
                 total += vault.previewRedeem(shares);
             }
         }
-        
         return total;
     }
 
@@ -108,38 +86,34 @@ contract YieldOptimizer is ERC20, Ownable {
     }
 
     function rebalance() external onlyOwner {
-        require(block.timestamp >= lastRebalance + 1 days, "Rebalance cooldown");
-        
-        address bestVault = _findBestVault();
-        
+        require(block.timestamp >= lastRebalance + 12 hours, "Rebalance cooldown");
+        address bestVault = findBestVault();
         if (bestVault != currentVault) {
             _withdrawFromCurrent();
             _depositTo(bestVault);
             currentVault = bestVault;
             emit Rebalanced(bestVault, asset.balanceOf(address(this)));
         }
-        
         lastRebalance = block.timestamp;
     }
 
-    function _addVault(address vault) internal {
-        allowedVaults.push(vault);
-        asset.approve(vault, type(uint256).max);
-        emit VaultAdded(vault);
-    }
 
-    function _findBestVault() internal view returns (address best) {
-        uint256 highestRate;
+    // Puis dans votre fonction findBestVault, utilisez cette interface
+    function findBestVault() public view returns (address best) {
+        uint256 highestRate = 0;
         for (uint i = 0; i < allowedVaults.length; i++) {
-            IERC4626 vault = IERC4626(allowedVaults[i]);
-            uint256 rate = vault.previewDeposit(1e6); // APY equivalent
+            Vault vault = Vault(allowedVaults[i]);
+            uint256 rate = vault.getInterestRate();
             if (rate > highestRate) {
                 highestRate = rate;
                 best = allowedVaults[i];
             }
         }
         require(best != address(0), "No vaults available");
+        return best;
     }
+
+
 
     function _withdrawFromCurrent() internal {
         if (currentVault != address(0)) {
@@ -154,8 +128,7 @@ contract YieldOptimizer is ERC20, Ownable {
     function _withdrawSomeFromCurrent(uint256 amount) internal {
         if (currentVault != address(0)) {
             IERC4626 vault = IERC4626(currentVault);
-            uint256 assetAmount = amount > 0 ? amount : asset.balanceOf(address(this));
-            vault.withdraw(assetAmount, address(this), address(this));
+            vault.withdraw(amount, address(this), address(this));
         }
     }
 
@@ -164,6 +137,12 @@ contract YieldOptimizer is ERC20, Ownable {
         if (amount > 0) {
             IERC4626(vault).deposit(amount, address(this));
         }
+    }
+
+    function _addVault(address vault) internal {
+        allowedVaults.push(vault);
+        require(asset.approve(vault, type(uint256).max), "Approve failed");
+        emit VaultAdded(vault);
     }
 
     function _removeFromArray(address[] memory arr, address element) internal pure returns (address[] memory) {
