@@ -41,9 +41,6 @@ const EZdefi = () => {
       <div>
         <Withdraw />
       </div>
-      <div>
-        <Rebalance />
-      </div>
       <div className="md:col-span-3">
         <Events />
       </div>
@@ -60,6 +57,9 @@ const EZdefi = () => {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-y-3 gap-x-0">
         <div>
           <Vaults/>
+        </div>
+        <div>
+        <Rebalance />
         </div>
         <div>
           <USDC address={address} />

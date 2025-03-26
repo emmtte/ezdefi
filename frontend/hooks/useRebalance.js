@@ -14,8 +14,7 @@ export const useRebalance = ( account, refetch) => {
       writeContract({
         address: YIELD_OPTIMIZER_ADDRESS,
         abi: YIELD_OPTIMIZER_ABI,
-        functionName: 'withdraw', // Assurez-vous que c'est la bonne fonction pour le rééquilibrage
-        args: [parseEther(rebalanceAmount)],
+        functionName: 'rebalance',
         account: account,
       });
     } catch (error) {
