@@ -128,7 +128,7 @@ const Events = () => {
         )}
 
         {eventDefinitions.length === 0 && (
-          <p className="text-yellow-600">Aucune définition d'événement trouvée dans l'ABI.</p>
+          <p className="text-yellow-600">{`Aucune définition d'événement trouvée dans l'ABI.`}</p>
         )}
 
         {events.length === 0 && !isLoading ? (

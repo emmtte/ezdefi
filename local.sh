@@ -7,4 +7,4 @@ npx hardhat coverage
 cd ..
 cp -r backend/ignition/deployments/chain-31337/artifacts/EZdefi*.json frontend/contracts/
 cp -r backend/ignition/deployments/chain-31337/deployed_addresses.json frontend/contracts/
-
+#npm run dev
