@@ -1,17 +1,16 @@
 'use client';
 import React, { useState, useEffect } from 'react';
-import { usePublicClient } from 'wagmi';
+import { publicClient } from '@/utils/publicClient'; // Assurez-vous d'importer le bon chemin
 import { YIELD_OPTIMIZER_ADDRESS, YIELD_OPTIMIZER_ABI } from '@/utils/constants';
 import { formatEther } from 'viem';
 import { Button } from '@/components/ui/button';
-import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/components/ui/card";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 
 const Events = () => {
   const [events, setEvents] = useState([]);
   const [error, setError] = useState(null);
   const [eventDefinitions, setEventDefinitions] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
-  const publicClient = usePublicClient();
 
   // Liste explicite des événements à récupérer
   const EVENT_NAMES = ['Deposited', 'Withdrawn', 'Rebalanced', 'Approval'];
@@ -44,7 +43,8 @@ const Events = () => {
             const logs = await publicClient.getLogs({
               address: YIELD_OPTIMIZER_ADDRESS,
               event: eventSignature,
-              fromBlock: 0n
+              fromBlock: 0n,
+              toBlock: 'latest'
             });
 
             // Transformer les logs avec le nom de l'événement et convertir les montants en ethers
@@ -92,10 +92,8 @@ const Events = () => {
   };
 
   useEffect(() => {
-    if (publicClient) {
-      fetchEvents();
-    }
-  }, [publicClient]);
+    fetchEvents();
+  }, []);
 
   const getEventColor = (eventName) => {
     switch (eventName) {
