@@ -1,7 +1,7 @@
 const { expect } = require("chai");
 const { ethers } = require("hardhat");
 
-describe("MintableUSDC Tests", function () {
+describe("USDC Tests", function () {
   let owner, user1, user2, user3;
   let usdc;
   const initialSupply = ethers.parseUnits("1000000", 18); // Correction des décimales à 18

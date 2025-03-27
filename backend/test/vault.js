@@ -2,10 +2,10 @@ const { expect } = require("chai");
 const { ethers } = require("hardhat");
 const { time } = require("@nomicfoundation/hardhat-network-helpers");
 
-describe("aToken Tests", function () {
+describe("vToken Tests", function () {
   let owner, user1, user2;
   let usdc, aToken;
-  const initialSupply = ethers.parseUnits("1000000", 6); // 1 million USDC
+  const initialSupply = ethers.parseUnits("1000000", 18); // 1 million USDC
   const oneDay = 24 * 60 * 60; // 1 jour en secondes
 
   beforeEach(async function () {
@@ -15,8 +15,8 @@ describe("aToken Tests", function () {
     const AToken = await ethers.getContractFactory("aToken");
     aToken = await AToken.deploy(await usdc.getAddress(), "Aave USDC", "aUSDC");
     await usdc.addMinter(await aToken.getAddress());
-    await usdc.transfer(user1.address, ethers.parseUnits("10000", 6));
-    await usdc.connect(user1).approve(await aToken.getAddress(), ethers.parseUnits("10000", 6));
+    await usdc.transfer(user1.address, ethers.parseUnits("10000", 18));
+    await usdc.connect(user1).approve(await aToken.getAddress(), ethers.parseUnits("10000", 18));
   });
   
   describe("Initialisation", function () {
@@ -43,7 +43,7 @@ describe("aToken Tests", function () {
   
   describe("Dépôts et Retraits", function () {
     it("Permet de déposer des actifs", async function () {
-      const depositAmount = ethers.parseUnits("1000", 6);
+      const depositAmount = ethers.parseUnits("1000", 18);
       const balanceBefore = await usdc.balanceOf(user1.address);
       await aToken.connect(user1).deposit(depositAmount, user1.address);
       const balanceAfter = await usdc.balanceOf(user1.address);
@@ -52,7 +52,7 @@ describe("aToken Tests", function () {
     });
     
     it("Permet de retirer des actifs", async function () {
-      const depositAmount = ethers.parseUnits("1000", 6);
+      const depositAmount = ethers.parseUnits("1000", 18);
       await aToken.connect(user1).deposit(depositAmount, user1.address);
       const usdcBefore = await usdc.balanceOf(user1.address);
       await aToken.connect(user1).withdraw(depositAmount, user1.address, user1.address);
@@ -63,7 +63,7 @@ describe("aToken Tests", function () {
   
   describe("Accumulation d'intérêts", function () {
     it("Accumule des intérêts correctement avec le temps", async function () {
-      const depositAmount = ethers.parseUnits("10000", 6);
+      const depositAmount = ethers.parseUnits("10000", 18);
       await aToken.connect(user1).deposit(depositAmount, user1.address);
       const initialContractBalance = await usdc.balanceOf(await aToken.getAddress());
       const initialTimestamp = await aToken.lastInterestUpdate();
@@ -75,7 +75,7 @@ describe("aToken Tests", function () {
       expect(newTimestamp).to.be.gt(initialTimestamp);
       const expectedInterest = depositAmount * BigInt(1500) * BigInt(30) / (BigInt(10000) * BigInt(365));
       const actualInterest = newContractBalance - initialContractBalance;
-      expect(actualInterest).to.be.closeTo(expectedInterest, ethers.parseUnits("1", 6));
+      expect(actualInterest).to.be.closeTo(expectedInterest, ethers.parseUnits("1", 18));
     });
     
     it("Ne génère pas d'intérêts si aucun actif n'est détenu", async function () {
@@ -94,7 +94,7 @@ describe("aToken Tests", function () {
     });
     
     it("Gère correctement un taux d'intérêt à zéro", async function () {
-      const depositAmount = ethers.parseUnits("1000", 6);
+      const depositAmount = ethers.parseUnits("1000", 18);
       await aToken.connect(user1).deposit(depositAmount, user1.address);
       await aToken.setInterestRate(0);
       const initialContractBalance = await usdc.balanceOf(await aToken.getAddress());
@@ -107,7 +107,7 @@ describe("aToken Tests", function () {
   
   describe("Fonctionnalités ERC4626", function () {
     it("Convertit correctement les actifs en parts", async function () {
-      const depositAmount = ethers.parseUnits("1000", 6);
+      const depositAmount = ethers.parseUnits("1000", 18);
       await aToken.connect(user1).deposit(depositAmount, user1.address);
       const shares = await aToken.balanceOf(user1.address);
       const assetsFromShares = await aToken.convertToAssets(shares);
@@ -115,7 +115,7 @@ describe("aToken Tests", function () {
     });
     
     it("Prévisualise correctement les dépôts et retraits", async function () {
-      const depositAmount = ethers.parseUnits("1000", 6);
+      const depositAmount = ethers.parseUnits("1000", 18);
       const previewShares = await aToken.previewDeposit(depositAmount);
       await aToken.connect(user1).deposit(depositAmount, user1.address);
       const actualShares = await aToken.balanceOf(user1.address);
