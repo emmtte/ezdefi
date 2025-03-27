@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { usePublicClient } from 'wagmi';
 import { parseAbiItem } from 'viem';
 
+
 export function useEvents({ address, eventAbi, fromBlock, toBlock = 'latest' }) {
   const [logs, setLogs] = useState([]);
   const publicClient = usePublicClient();

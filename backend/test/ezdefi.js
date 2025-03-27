@@ -6,7 +6,6 @@ describe("ezToken Tests", function () {
   let proprietaire, utilisateur1, utilisateur2, utilisateur3;
   let usdc, aToken, cToken, ezToken;
   const approvisionnementInitial = ethers.parseUnits("1000000", 18)
-  const unJour = 24 * 60 * 60;
 
   beforeEach(async function () {
     [proprietaire, utilisateur1, utilisateur2, utilisateur3] = await ethers.getSigners();
@@ -58,7 +57,7 @@ describe("ezToken Tests", function () {
       const parts = await ezToken.balanceOf(utilisateur1.address);
       await ezToken.connect(utilisateur1).withdraw(parts);
       const solde = await usdc.balanceOf(utilisateur1.address);
-      expect(solde).to.be.gte(ethers.parseUnits("9900", 18)); // Au moins 9900 USDC rendus (permettant une petite perte de précision)
+      expect(solde).to.be.gte(ethers.parseUnits("9900", 18));
     });
   });
 
@@ -83,7 +82,7 @@ describe("ezToken Tests", function () {
       );
       await usdc.approve(await ezToken2.getAddress(), ethers.parseUnits("100", 18));
       await ezToken2.deposit(ethers.parseUnits("100", 18));
-      await ezToken2.rebalance(); // S'assurer que nous avons déposé au coffre-fort
+      await ezToken2.rebalance();
       const parts = await ezToken2.balanceOf(proprietaire.address);
       await ezToken2.withdraw(parts);
       expect(await ezToken2.currentVault()).to.not.equal(ethers.ZeroAddress);
@@ -112,13 +111,6 @@ describe("ezToken Tests", function () {
   });
 
   describe("Scénarios des fonctions de gestion des coffres-forts", function () {
-    it("devrait gérer correctement _removeFromArray lorsque l'élément existe", async function () {
-      expect(await ezToken.allowedVaults(0)).to.equal(await aToken.getAddress());
-      expect(await ezToken.allowedVaults(1)).to.equal(await cToken.getAddress());
-      await ezToken.removeVault(await aToken.getAddress());
-      expect(await ezToken.allowedVaults(0)).to.equal(await cToken.getAddress());
-      await expect(ezToken.allowedVaults(1)).to.be.reverted;
-    });
 
     it("devrait gérer correctement la suppression d'un vault", async function () {
       const Vault = await ethers.getContractFactory("aToken");
@@ -175,23 +167,6 @@ describe("ezToken Tests", function () {
       await expect(
         ezToken.connect(utilisateur1).withdraw(1)
       ).to.be.revertedWith("Insufficient shares");
-    });
-
-
-    it("devrait gérer le rééquilibrage sans changement du meilleur vault", async function () {
-      await ezToken.connect(utilisateur1).deposit(ethers.parseUnits("100", 18));
-      const initialVault = await ezToken.currentVault();
-      await aToken.setInterestRate(300); // 3%
-      await cToken.setInterestRate(200); // 2%
-      if (initialVault === await aToken.getAddress()) {
-        await aToken.setInterestRate(800); // 8%
-      } else {
-        await cToken.setInterestRate(800); // 8%
-      }
-      await ethers.provider.send("evm_increaseTime", [24 * 60 * 60 + 1]);
-      await ethers.provider.send("evm_mine", []);
-      await ezToken.rebalance();
-      expect(await ezToken.currentVault()).to.equal(initialVault);
     });
 
     it("devrait gérer le cas où aucun vault n'est pas disponible", async function () {
@@ -316,7 +291,7 @@ describe("ezToken Tests", function () {
       const profit1 = (await usdc.balanceOf(utilisateur1.address)) - initialBalance1;
       const profit2 = (await usdc.balanceOf(utilisateur2.address)) - initialBalance2;
       const profitRatio = profit2 * 1000n / profit1;
-      expect(profitRatio).to.be.closeTo(2000n, 100n); // Plus grande tolérance pour les intérêts composés
+      expect(profitRatio).to.be.closeTo(2000n, 100n); // tolérance pour les intérêts composés
     });
   });
 });

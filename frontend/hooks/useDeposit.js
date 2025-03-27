@@ -20,7 +20,7 @@ export const useDeposit = (account) => {
       });
     } catch (error) {
       console.error("Erreur lors du dépôt :", error);
-      toast.error(`Erreur lors du dépôt : ${error.shortMessage || error.message}`);
+      toast(`Erreur lors du dépôt : ${error.shortMessage || error.message}`);
     }
   };
 

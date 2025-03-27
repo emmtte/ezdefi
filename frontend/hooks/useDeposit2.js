@@ -56,14 +56,14 @@ export const useDeposit2 = (account, onSuccess) => {
         }, {
           onSuccess: (hash) => {
             setApproveHash(hash);
-            toast.info("Autorisation en attente...");
+            toast("Autorisation en attente...");
           }
         });
       } else {
         executeDeposit(amountWei);
       }
     } catch (error) {
-      toast.error(`Erreur: ${error.shortMessage || error.message}`);
+      toast(`Erreur: ${error.shortMessage || error.message}`);
     }
   };
 
@@ -85,7 +85,7 @@ export const useDeposit2 = (account, onSuccess) => {
       setStep('idle');
       setAmount('');
       onSuccess?.();
-      toast.success("Dépôt réussi!");
+      toast("Dépôt réussi!");
     }
   }, [isSuccess]);
 

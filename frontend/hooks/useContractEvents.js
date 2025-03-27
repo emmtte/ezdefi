@@ -1,53 +1,122 @@
 import { useState, useEffect } from 'react';
-import { parseAbiItem } from 'viem';
-import { publicClient } from '@/utils/client';
-import { YIELD_OPTIMIZER_ADDRESS, YIELD_OPTIMIZER_ABI } from '@/utils/constants'
+import { ethers } from 'ethers';
+import { publicClient } from '@/utils/publicClient';
 
-export const useContractEvents = () => {
-  
+export const useContractEvents = (contractAddress) => {
   const [events, setEvents] = useState([]);
+  const [error, setError] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [debugInfo, setDebugInfo] = useState('');
 
-  const getEvents = async () => {
+  // Define event topics
+  const EVENT_TOPICS = {
+    Deposited: ethers.id("Deposited(address,uint256,uint256)"),
+    Withdrawn: ethers.id("Withdrawn(address,uint256,uint256)"),
+    Rebalanced: ethers.id("Rebalanced(address,uint256)")
+  };
+
+  const fetchEvents = async () => {
+    setIsLoading(true);
+    setError(null);
+    setDebugInfo('');
+
     try {
-      const depositEvents = await publicClient.getLogs({
-        address: YIELD_OPTIMIZER_ADDRESS,
-        event: parseAbiItem('event etherDeposited(address indexed account, uint amount)'),
-        fromBlock: 7895383n,
-        toBlock: 'latest',
-      });
+      // Log connection information
+      console.log('Contract Address:', contractAddress);
+      console.log('Topics:', EVENT_TOPICS);
 
-      const withdrawEvents = await publicClient.getLogs({
-        address: YIELD_OPTIMIZER_ADDRESS,
-        event: parseAbiItem('event etherWithdrawed(address indexed account, uint amount)'),
-        fromBlock: 7895383n,
-        toBlock: 'latest',
-      });
+      // Verify client connection
+      const chainId = await publicClient.getChainId();
+      console.log('Chain ID:', chainId);
 
-      const combinedEvents = depositEvents.map((event) => ({
-        type: 'Deposit',
-        address: event.args.account,
-        amount: event.args.amount,
-        blockTimestamp: Number(event.blockTimestamp),
-      })).concat(withdrawEvents.map((event) => ({
-        type: 'Withdraw',
-        address: event.args.account,
-        amount: event.args.amount,
-        blockTimestamp: Number(event.blockTimestamp),
-      })));
+      const eventSignatures = [
+        {
+          eventName: 'Deposited',
+          topic: EVENT_TOPICS.Deposited,
+          fields: ['user', 'amount', 'shares']
+        },
+        {
+          eventName: 'Withdrawn',
+          topic: EVENT_TOPICS.Withdrawn,
+          fields: ['user', 'amount', 'shares']
+        },
+        {
+          eventName: 'Rebalanced',
+          topic: EVENT_TOPICS.Rebalanced,
+          fields: ['newVault', 'amount']
+        }
+      ];
 
-      const sortedEvents = combinedEvents.sort((a, b) => Number(b.blockTimestamp) - Number(a.blockTimestamp));
-      setEvents(sortedEvents);
+      // Fetch logs for each event
+      const allLogs = await Promise.all(
+        eventSignatures.map(async (eventSig) => {
+          try {
+            console.log(`Fetching logs for ${eventSig.eventName}`);
+
+            const logs = await publicClient.getLogs({
+              address: contractAddress,
+              topics: [eventSig.topic],
+              fromBlock: 0n,
+              toBlock: 'latest'
+            });
+
+            console.log(`Number of logs for ${eventSig.eventName}:`, logs.length);
+
+            // Add debug information
+            if (logs.length === 0) {
+              setDebugInfo(prev => prev + `\nNo logs found for ${eventSig.eventName}`);
+            }
+
+            // Transform logs
+            return logs.map(log => {
+              console.log(`Log for ${eventSig.eventName}:`, log);
+              return {
+                eventName: eventSig.eventName,
+                blockNumber: log.blockNumber,
+                transactionHash: log.transactionHash,
+                fields: eventSig.fields,
+                ...log.args
+              };
+            });
+          } catch (error) {
+            console.error(`Error for ${eventSig.eventName}:`, error);
+            setDebugInfo(prev => prev + `\nError for ${eventSig.eventName}: ${error.message}`);
+            return [];
+          }
+        })
+      );
+
+      // Combine and sort logs
+      const combinedEvents = allLogs.flat().sort((a, b) => 
+        Number(b.blockNumber || 0) - Number(a.blockNumber || 0)
+      );
+
+      setEvents(combinedEvents);
+
+      // If no events found
+      if (combinedEvents.length === 0) {
+        setDebugInfo('No events found. Please check:\n- Contract address\n- Network\n- Event topics');
+      }
     } catch (error) {
-      console.error("Erreur lors de la récupération des événements :", error);
-      // Gérer l'erreur ici, par exemple, afficher un message à l'utilisateur
+      console.error('Global error:', error);
+      setError(error.message);
+      setDebugInfo(`Global error: ${error.message}`);
+    } finally {
+      setIsLoading(false);
     }
   };
 
+  // Fetch events on component mount
   useEffect(() => {
-    if (YIELD_OPTIMIZER_ADDRESS) {
-      getEvents();
-    }
-  }, [YIELD_OPTIMIZER_ADDRESS]);
+    fetchEvents();
+  }, [contractAddress]);
 
-  return events;
+  // Return all necessary states and the refresh function
+  return {
+    events,
+    error,
+    isLoading,
+    debugInfo,
+    fetchEvents
+  };
 };

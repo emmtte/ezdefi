@@ -19,13 +19,13 @@ export const useRebalance = ( account, refetch) => {
       });
     } catch (error) {
       console.error("Erreur lors du rééquilibrage :", error);
-      toast.error(`Erreur lors du rééquilibrage : ${error.shortMessage || error.message}`);
+      toast(`Erreur lors du rééquilibrage : ${error.shortMessage || error.message}`);
     }
   };
 
   useEffect(() => {
     if (isConfirmed) {
-      toast.success("Transaction successful.");
+      toast("Transaction successful.");
       setAmount('');
       refetch();
     }

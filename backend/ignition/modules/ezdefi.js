@@ -4,29 +4,22 @@ const { ethers } = require("ethers");
 const hre = require("hardhat");
 
 module.exports = buildModule("EZdefi", (m) => {
-  // Obtenir le nom du réseau directement de l'environnement Hardhat
   const networkName = hre.network.name;
   console.log(`Déploiement sur le réseau: ${networkName}`);
   
-  // Utilisation d'ethers pour manipuler les unités avec 18 décimales
   const initialSupply = ethers.parseUnits("10000000", 18);
   const userAmount = ethers.parseUnits("100000", 18);
   
-  // Configuration des adresses de déploiement
   let deployerAddress, user1Address, user2Address;
   
   if (networkName === "localhost" || networkName === "hardhat") {
-    // Sur localhost, on utilise les adresses des comptes par défaut
     deployerAddress = undefined; // undefined = utiliser le compte par défaut
     user1Address = undefined;
     user2Address = undefined;
     console.log("Utilisation des comptes Hardhat par défaut");
   } else {
-    // Sur les réseaux de test/mainnet, on spécifie explicitement les adresses
-    // Ignition utilisera les comptes associés à ces adresses dans la config du réseau
     const accounts = hre.config.networks[networkName]?.accounts || [];
     if (Array.isArray(accounts) && accounts.length >= 3) {
-      // Dériver les adresses à partir des clés privées
       const wallets = accounts.map(privateKey => new ethers.Wallet(privateKey));
       deployerAddress = wallets[0].address;
       user1Address = wallets[1].address;
@@ -38,7 +31,7 @@ module.exports = buildModule("EZdefi", (m) => {
     }
   }
   
-  // Déploiement du token USDC mintable
+  // Déploiement du token USDC
   const usdc = m.contract("MintableUSDC", ["USD Coin", "USDC", initialSupply], {
     from: deployerAddress
   });

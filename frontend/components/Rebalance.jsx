@@ -6,47 +6,22 @@ import Rate from './Rate';
 import { useRebalance } from '@/hooks/useRebalance';
 import { toast } from 'sonner';
 import { useAccount } from 'wagmi';
-import { AAVE_USDC_ADDRESS, COMPOUND_USDC_ADDRESS } from '@/utils/constants';
 
 const VaultsRebalance = () => {
-    // Vault configurations using the imported addresses
-    const vaults = [
-        { 
-            name: "A", 
-            address: AAVE_USDC_ADDRESS 
-        },
-        { 
-            name: "B", 
-            address: COMPOUND_USDC_ADDRESS 
-        }
-    ];
 
-    // Get the connected account
     const { address: account } = useAccount();
 
-    // Rebalance hook
     const { 
         handleRebalance, 
         isPending: isRebalancing, 
         hash: rebalanceHash, 
         error: rebalanceError 
     } = useRebalance(account, () => {
-        // Optional refetch logic if needed
-        toast.success("Rééquilibrage effectué avec succès");
+        toast("Rééquilibrage effectué avec succès");
     });
 
     return (
         <div className="space-y-6">
-            <div className="grid md:grid-cols-2 gap-6">
-                {vaults.map((vault) => (
-                    <Rate 
-                        key={vault.address} 
-                        name={vault.name} 
-                        address={vault.address} 
-                    />
-                ))}
-            </div>
-
             <Card className="w-full max-w-md mx-auto">
                 <CardHeader>
                     <CardTitle>Rééquilibrage des Vaults</CardTitle>

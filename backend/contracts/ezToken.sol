@@ -38,10 +38,10 @@ contract YieldOptimizer is ERC20, Ownable {
         if (currentVault == address(0)) {
             currentVault = findBestVault();
         }
-        _depositTo(currentVault);
+        _depositTo(currentVault); 
         uint256 totalAssetsAfter = totalAssets();
         if (totalSupply() == 0) {
-        shares = amount; // Correction : Pas de calcul nécessaire si totalSupply() == 0
+        shares = amount;
         } else {
         shares = amount * totalSupply() / (totalAssetsAfter - amount);
         }
@@ -52,7 +52,7 @@ contract YieldOptimizer is ERC20, Ownable {
     
     function withdraw(uint256 shares) external returns (uint256 amount) {
         require(shares > 0, "Shares must be greater than 0");
-        require(balanceOf(msg.sender) >= shares, "Insufficient shares");
+        require(balanceOf(msg.sender) >= shares, "Insufficient shares"); 
         uint256 totalAssetsBefore = totalAssets();
         amount = shares * totalAssetsBefore / totalSupply();
         _burn(msg.sender, shares);
@@ -65,7 +65,6 @@ contract YieldOptimizer is ERC20, Ownable {
         return amount;
     }
 
-    // Le reste des fonctions reste identique...
     function totalAssets() public view returns (uint256) {
         uint256 total = asset.balanceOf(address(this));
         if (currentVault != address(0)) {
@@ -99,8 +98,6 @@ contract YieldOptimizer is ERC20, Ownable {
         lastRebalance = block.timestamp;
     }
 
-
-    // Puis dans votre fonction findBestVault, utilisez cette interface
     function findBestVault() public view returns (address best) {
         uint256 highestRate = 0;
         for (uint i = 0; i < allowedVaults.length; i++) {
@@ -114,8 +111,6 @@ contract YieldOptimizer is ERC20, Ownable {
         require(best != address(0), "No vaults available");
         return best;
     }
-
-
 
     function _withdrawFromCurrent() internal {
         if (currentVault != address(0)) {

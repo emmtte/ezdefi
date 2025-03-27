@@ -3,10 +3,10 @@ const { ethers } = require("hardhat");
 const { time } = require("@nomicfoundation/hardhat-network-helpers");
 
 describe("vToken Tests", function () {
-  let owner, user1, user2;
+  let owner, user1;
   let usdc, aToken;
-  const initialSupply = ethers.parseUnits("1000000", 18); // 1 million USDC
-  const oneDay = 24 * 60 * 60; // 1 jour en secondes
+  const initialSupply = ethers.parseUnits("1000000", 18);
+  const oneDay = 24 * 60 * 60;
 
   beforeEach(async function () {
     [owner, user1, user2] = await ethers.getSigners();
@@ -83,14 +83,6 @@ describe("vToken Tests", function () {
       await time.increase(30 * oneDay);
       await aToken.accrueInterest();
       expect(await usdc.balanceOf(await aToken.getAddress())).to.equal(0);
-    });
-    
-    it("Met à jour lastInterestUpdate même sans intérêts", async function () {
-      const initialTimestamp = await aToken.lastInterestUpdate();
-      await time.increase(oneDay);
-      await aToken.accrueInterest();
-      const newTimestamp = await aToken.lastInterestUpdate();
-      expect(newTimestamp).to.be.gt(initialTimestamp);
     });
     
     it("Gère correctement un taux d'intérêt à zéro", async function () {

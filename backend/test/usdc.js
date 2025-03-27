@@ -4,7 +4,7 @@ const { ethers } = require("hardhat");
 describe("USDC Tests", function () {
   let owner, user1, user2, user3;
   let usdc;
-  const initialSupply = ethers.parseUnits("1000000", 18); // Correction des décimales à 18
+  const initialSupply = ethers.parseUnits("1000000", 18);
 
   beforeEach(async function () {
     [owner, user1, user2, user3] = await ethers.getSigners();
@@ -69,7 +69,6 @@ describe("USDC Tests", function () {
   });
   
   it("Vérifie les fonctionnalités ERC20 standards", async function () {
-    // Mint des tokens à user1 et user2 pour les tests de transfert
     await usdc.mint(user1.address, ethers.parseUnits("10000", 18));
     await usdc.mint(user2.address, ethers.parseUnits("10000", 18));
 

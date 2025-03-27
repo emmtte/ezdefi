@@ -20,7 +20,7 @@ export const useWithdraw = (account) => {
       });
     } catch (error) {
       console.error("Erreur lors du retrait :", error);
-      toast.error(`Erreur lors du retrait : ${error.shortMessage || error.message}`);
+      toast(`Erreur lors du retrait : ${error.shortMessage || error.message}`);
     }
   };
 
