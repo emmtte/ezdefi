@@ -18,8 +18,8 @@ export const useRebalance = ( account, refetch) => {
         account: account,
       });
     } catch (error) {
-      console.error("Erreur lors du rééquilibrage :", error);
-      toast(`Erreur lors du rééquilibrage : ${error.shortMessage || error.message}`);
+      console.error("Erreur lors de l'optimisation du Rendement :", error);
+      toast(`Erreur lors de l'optimisation du Rendement : ${error.shortMessage || error.message}`);
     }
   };
 

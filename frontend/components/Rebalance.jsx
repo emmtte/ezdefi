@@ -17,14 +17,14 @@ const VaultsRebalance = () => {
         hash: rebalanceHash, 
         error: rebalanceError 
     } = useRebalance(account, () => {
-        toast("Rééquilibrage effectué avec succès");
+        toast("Optimisation du Rendement effectué avec succès");
     });
 
     return (
         <div className="space-y-6">
             <Card className="w-full max-w-md mx-auto">
                 <CardHeader>
-                    <CardTitle>Rééquilibrage des Vaults</CardTitle>
+                    <CardTitle>Optimisation du Rendement</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                     {rebalanceHash && (
@@ -42,7 +42,7 @@ const VaultsRebalance = () => {
                         disabled={isRebalancing || !account}
                         className="w-full"
                     >
-                        {isRebalancing ? 'Rééquilibrage en cours...' : 'Rééquilibrer les Vaults'}
+                        {isRebalancing ? 'Optimisation du Rendement en cours...' : 'Optimisation du Rendement'}
                     </Button>
                 </CardContent>
                 <CardFooter className="text-xs text-gray-500">

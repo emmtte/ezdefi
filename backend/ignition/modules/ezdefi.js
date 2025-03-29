@@ -51,7 +51,7 @@ module.exports = buildModule("EZdefi", (m) => {
   const yieldOptimizer = m.contract("YieldOptimizer", [usdc, [aToken, cToken]], {
     from: deployerAddress
   });
-
+/*
   // Autorisation des vaults à mint des tokens USDC
   const addMinterAToken = m.call(usdc, "addMinter", [aToken], { 
     id: "minterAaveUSDC",
@@ -98,15 +98,11 @@ module.exports = buildModule("EZdefi", (m) => {
       after: [transferUser2],
     }
   );
-  
+  */
   return {
     usdc,
     aToken,
     cToken,
-    yieldOptimizer,
-    transferUser1,
-    transferUser2,
-    approveUser1,
-    approveUser2,
+    yieldOptimizer
   };
 });

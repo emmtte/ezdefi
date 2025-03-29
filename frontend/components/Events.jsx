@@ -82,7 +82,7 @@ const EventsComponent = () => {
           };
         case 'Rebalanced':
           return {
-            title: "Rééquilibrage",
+            title: "Optimisation du Rendement",
             textColor: "text-blue-600",
             content: (
               <>
