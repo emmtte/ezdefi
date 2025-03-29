@@ -95,7 +95,7 @@ const EventsComponent = () => {
           return {
             title: "Événement inconnu",
             textColor: "text-gray-600",
-            content: <p>Type d'événement non reconnu</p>
+            content: <p>{`Type d'événement non reconnu`}</p>
           };
       }
     } catch (err) {
@@ -165,7 +165,7 @@ const EventsComponent = () => {
                 variant="outline" 
                 onClick={() => setDisplayCount(prev => prev + 10)}
               >
-                Afficher plus d'événements
+                {`Afficher plus d'événements`}
               </Button>
             </div>
           )}
