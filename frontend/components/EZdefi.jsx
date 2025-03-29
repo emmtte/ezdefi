@@ -2,25 +2,20 @@
 import { useAccount } from 'wagmi';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import Deposit from '@/components/Deposit';
 import Deposit2 from '@/components/Deposit2';
 import Withdraw from '@/components/Withdraw';
 import Rebalance from '@/components/Rebalance';
 import Events from '@/components/Events';
 import USDC from '@/components/USDC';
-import Rate from '@/components/Rate';
 import Rate2 from '@/components/Rate2';
 import Vaults from '@/components/Vaults';
-import BalanceUSDC from '@/components/BalanceUSDC';
 import USDCFaucet from '@/components/USDCFaucet';
 import { useOwnerCheck } from '@/hooks/useOwnerCheck';
-import { useContractEvents } from '@/hooks/useContractEvents';
 import { AAVE_USDC_ADDRESS, COMPOUND_USDC_ADDRESS } from '@/utils/constants';
 
 const EZdefi = () => {
   const { isConnected, address } = useAccount();
   const isOwner = useOwnerCheck(address);
-  const events = useContractEvents();
 
   // Si l'utilisateur n'est pas connecté, afficher une alerte
   if (!isConnected) {
@@ -101,20 +96,20 @@ const EZdefi = () => {
     <Tabs defaultValue="user" className="w-full">
       <TabsList className="mb-3">
         <TabsTrigger value="user">Interface utilisateur</TabsTrigger>
-        <TabsTrigger value="admin">Outils administrateur</TabsTrigger>
         <TabsTrigger value="test">Outils de tests</TabsTrigger>
+        <TabsTrigger value="admin">Outils administrateur</TabsTrigger>
       </TabsList>
 
       <TabsContent value="user">
         <UserInterface />
       </TabsContent>
 
-      <TabsContent value="admin">
-        <AdminInterface />
-      </TabsContent>
-
       <TabsContent value="test">
         <TestInterface />
+      </TabsContent>
+
+      <TabsContent value="admin">
+        <AdminInterface />
       </TabsContent>
 
     </Tabs>

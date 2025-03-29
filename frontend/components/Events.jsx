@@ -1,79 +1,178 @@
 'use client';
-import { YIELD_OPTIMIZER_ADDRESS } from '@/utils/constants'
 
-import React from 'react';
+import React, { useState, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { useContractEvents } from '@/hooks/useContractEvents'; // adjust the import path as needed
+import { YIELD_OPTIMIZER_ADDRESS } from '@/utils/constants';
+import { formatUnits } from 'viem';
+import { useContractEvents } from '@/hooks/useContractEvents';
+import { RefreshCw } from 'lucide-react';
 
-const Events = () => {
-  const { 
-    events, 
-    error, 
-    isLoading, 
-    debugInfo, 
-    fetchEvents 
-  } = useContractEvents(YIELD_OPTIMIZER_ADDRESS);
+// Composant d'affichage des événements
+const EventsComponent = () => {
+  const [refreshKey, setRefreshKey] = useState(0);
+  const [displayCount, setDisplayCount] = useState(10);
+  const { events, loading, error } = useContractEvents(YIELD_OPTIMIZER_ADDRESS, 'earliest', refreshKey);
+
+  // Fonction pour rafraîchir les données
+  const handleRefresh = useCallback(() => {
+    setRefreshKey(prevKey => prevKey + 1);
+  }, []);
+
+  if (loading) return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <h2 className="text-2xl font-bold">Historique des événements</h2>
+        <Button variant="outline" size="sm" onClick={handleRefresh} disabled={loading}>
+          <RefreshCw className="w-4 h-4 mr-2" />
+          Actualiser
+        </Button>
+      </div>
+      <p className="text-center py-8">Chargement des événements...</p>
+    </div>
+  );
+  
+  if (error) return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <h2 className="text-2xl font-bold">Historique des événements</h2>
+        <Button variant="outline" size="sm" onClick={handleRefresh}>
+          <RefreshCw className="w-4 h-4 mr-2" />
+          Actualiser
+        </Button>
+      </div>
+      <div className="text-center py-8 text-red-500">
+        Erreur lors du chargement des événements: {error.message}
+      </div>
+    </div>
+  );
+
+  const formatAmount = (amount) => {
+    return formatUnits(amount, 18); // Ajustez la décimale selon votre token
+  };
+
+  const getEventDetails = (log) => {
+    try {
+      const eventName = log.eventName;
+      
+      switch (eventName) {
+        case 'Deposited':
+          return {
+            title: "Dépôt",
+            textColor: "text-green-600",
+            content: (
+              <>
+                <p><span className="font-semibold">Utilisateur:</span> {log.args.user}</p>
+                <p><span className="font-semibold">Montant:</span> {formatAmount(log.args.amount)} USDC</p>
+                <p><span className="font-semibold">Parts:</span> {formatAmount(log.args.shares)} EZD</p>
+              </>
+            )
+          };
+        case 'Withdrawn':
+          return {
+            title: "Retrait",
+            textColor: "text-red-600",
+            content: (
+              <>
+                <p><span className="font-semibold">Utilisateur:</span> {log.args.user}</p>
+                <p><span className="font-semibold">Montant:</span> {formatAmount(log.args.amount)} USDC</p>
+                <p><span className="font-semibold">Parts brûlées:</span> {formatAmount(log.args.shares)} EZD</p>
+              </>
+            )
+          };
+        case 'Rebalanced':
+          return {
+            title: "Rééquilibrage",
+            textColor: "text-blue-600",
+            content: (
+              <>
+                <p><span className="font-semibold">Nouveau coffre-fort:</span> {log.args.newVault}</p>
+                <p><span className="font-semibold">Montant transféré:</span> {formatAmount(log.args.amount)} USDC</p>
+              </>
+            )
+          };
+        default:
+          return {
+            title: "Événement inconnu",
+            textColor: "text-gray-600",
+            content: <p>Type d'événement non reconnu</p>
+          };
+      }
+    } catch (err) {
+      console.error("Erreur lors du décodage de l'événement:", err);
+      return {
+        title: "Erreur",
+        textColor: "text-gray-600",
+        content: <p>Impossible de décoder cet événement</p>
+      };
+    }
+  };
+
+  const formatDate = (timestamp) => {
+    if (!timestamp) return "Date inconnue";
+    return new Date(Number(timestamp) * 1000).toLocaleString();
+  };
 
   return (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between space-y-0">
-        <CardTitle>Événements du contrat</CardTitle>
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <h2 className="text-2xl font-bold">Historique des événements</h2>
         <Button 
           variant="outline" 
-          size="sm"
-          onClick={fetchEvents}
-          disabled={isLoading}
+          size="sm" 
+          onClick={handleRefresh}
+          disabled={loading}
         >
-          {isLoading ? 'Chargement...' : 'Actualiser'}
+          <RefreshCw className="w-4 h-4 mr-2" />
+          Actualiser
         </Button>
-      </CardHeader>
+      </div>
       
-      <CardContent>
-        {error && (
-          <div className="bg-red-100 text-red-800 p-4 rounded-lg mb-4">
-            <strong>Erreur :</strong> {error}
+      {events.length === 0 ? (
+        <p className="text-center py-8">Aucun événement trouvé</p>
+      ) : (
+        <>
+          <div className="space-y-4">
+            {events.slice(0, displayCount).map((log, index) => {
+              const { title, textColor, content } = getEventDetails(log);
+              
+              return (
+                <Card key={`${log.blockNumber}-${log.logIndex}-${index}-${refreshKey}`} className="w-full">
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className={`text-sm font-medium ${textColor}`}>
+                      {title}
+                    </CardTitle>
+                    <div className="text-xs text-gray-500">
+                      Block #{log.blockNumber.toString()}
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-xs">{content}</div>
+                    {log.blockTimestamp && (
+                      <div className="mt-2 text-xs text-gray-500">
+                        {formatDate(log.blockTimestamp)}
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              );
+            })}
           </div>
-        )}
-
-        {debugInfo && (
-          <div className="bg-yellow-100 text-yellow-800 p-4 rounded-lg mb-4 whitespace-pre-wrap">
-            <strong>Informations de débogage :</strong> {debugInfo}
-          </div>
-        )}
-
-        {events.length === 0 && !isLoading ? (
-          <p>Aucun événement trouvé.</p>
-        ) : (
-          <div className="space-y-2">
-            {events.map((event, index) => (
-              <Card key={index} className="w-full">
-                <CardHeader className="pb-2">
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm font-semibold">
-                      {event.eventName}
-                    </span>
-                    <span className="text-xs text-muted-foreground">
-                      Block #{event.blockNumber?.toString()}
-                    </span>
-                  </div>
-                </CardHeader>
-                <CardContent className="text-xs space-y-1">
-                  <pre>{JSON.stringify(event, null, 2)}</pre>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        )}
-
-        {isLoading && (
-          <div className="flex justify-center items-center py-4">
-            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-gray-900"></div>
-          </div>
-        )}
-      </CardContent>
-    </Card>
+          
+          {displayCount < events.length && (
+            <div className="text-center mt-4">
+              <Button 
+                variant="outline" 
+                onClick={() => setDisplayCount(prev => prev + 10)}
+              >
+                Afficher plus d'événements
+              </Button>
+            </div>
+          )}
+        </>
+      )}
+    </div>
   );
 };
 
-export default Events;
+export default EventsComponent;

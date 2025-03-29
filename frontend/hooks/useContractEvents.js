@@ -1,122 +1,98 @@
 import { useState, useEffect } from 'react';
-import { ethers } from 'ethers';
 import { publicClient } from '@/utils/publicClient';
 
-export const useContractEvents = (contractAddress) => {
+// Définition des ABI des événements
+const eventsAbi = [
+  {
+    type: 'event',
+    name: 'Deposited',
+    inputs: [
+      { indexed: true, name: 'user', type: 'address' },
+      { indexed: false, name: 'amount', type: 'uint256' },
+      { indexed: false, name: 'shares', type: 'uint256' }
+    ]
+  },
+  {
+    type: 'event',
+    name: 'Withdrawn',
+    inputs: [
+      { indexed: true, name: 'user', type: 'address' },
+      { indexed: false, name: 'amount', type: 'uint256' },
+      { indexed: false, name: 'shares', type: 'uint256' }
+    ]
+  },
+  {
+    type: 'event',
+    name: 'Rebalanced',
+    inputs: [
+      { indexed: true, name: 'newVault', type: 'address' },
+      { indexed: false, name: 'amount', type: 'uint256' }
+    ]
+  }
+];
+
+/**
+ * Hook personnalisé pour récupérer les événements d'un contrat
+ * @param {string} contractAddress - Adresse du contrat
+ * @param {string|number} fromBlock - Bloc de départ pour la recherche (default: 'earliest')
+ * @param {number} refreshKey - Clé pour déclencher une actualisation
+ * @returns {Object} - Objet contenant les événements, l'état de chargement et les erreurs
+ */
+export const useContractEvents = (contractAddress, fromBlock = 'earliest', refreshKey = 0) => {
   const [events, setEvents] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [debugInfo, setDebugInfo] = useState('');
 
-  // Define event topics
-  const EVENT_TOPICS = {
-    Deposited: ethers.id("Deposited(address,uint256,uint256)"),
-    Withdrawn: ethers.id("Withdrawn(address,uint256,uint256)"),
-    Rebalanced: ethers.id("Rebalanced(address,uint256)")
-  };
-
-  const fetchEvents = async () => {
-    setIsLoading(true);
-    setError(null);
-    setDebugInfo('');
-
-    try {
-      // Log connection information
-      console.log('Contract Address:', contractAddress);
-      console.log('Topics:', EVENT_TOPICS);
-
-      // Verify client connection
-      const chainId = await publicClient.getChainId();
-      console.log('Chain ID:', chainId);
-
-      const eventSignatures = [
-        {
-          eventName: 'Deposited',
-          topic: EVENT_TOPICS.Deposited,
-          fields: ['user', 'amount', 'shares']
-        },
-        {
-          eventName: 'Withdrawn',
-          topic: EVENT_TOPICS.Withdrawn,
-          fields: ['user', 'amount', 'shares']
-        },
-        {
-          eventName: 'Rebalanced',
-          topic: EVENT_TOPICS.Rebalanced,
-          fields: ['newVault', 'amount']
-        }
-      ];
-
-      // Fetch logs for each event
-      const allLogs = await Promise.all(
-        eventSignatures.map(async (eventSig) => {
-          try {
-            console.log(`Fetching logs for ${eventSig.eventName}`);
-
-            const logs = await publicClient.getLogs({
-              address: contractAddress,
-              topics: [eventSig.topic],
-              fromBlock: 0n,
-              toBlock: 'latest'
-            });
-
-            console.log(`Number of logs for ${eventSig.eventName}:`, logs.length);
-
-            // Add debug information
-            if (logs.length === 0) {
-              setDebugInfo(prev => prev + `\nNo logs found for ${eventSig.eventName}`);
-            }
-
-            // Transform logs
-            return logs.map(log => {
-              console.log(`Log for ${eventSig.eventName}:`, log);
-              return {
-                eventName: eventSig.eventName,
-                blockNumber: log.blockNumber,
-                transactionHash: log.transactionHash,
-                fields: eventSig.fields,
-                ...log.args
-              };
-            });
-          } catch (error) {
-            console.error(`Error for ${eventSig.eventName}:`, error);
-            setDebugInfo(prev => prev + `\nError for ${eventSig.eventName}: ${error.message}`);
-            return [];
-          }
-        })
-      );
-
-      // Combine and sort logs
-      const combinedEvents = allLogs.flat().sort((a, b) => 
-        Number(b.blockNumber || 0) - Number(a.blockNumber || 0)
-      );
-
-      setEvents(combinedEvents);
-
-      // If no events found
-      if (combinedEvents.length === 0) {
-        setDebugInfo('No events found. Please check:\n- Contract address\n- Network\n- Event topics');
-      }
-    } catch (error) {
-      console.error('Global error:', error);
-      setError(error.message);
-      setDebugInfo(`Global error: ${error.message}`);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  // Fetch events on component mount
   useEffect(() => {
-    fetchEvents();
-  }, [contractAddress]);
+    const fetchEvents = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        
+        // Obtenir les logs pour chaque type d'événement
+        const depositLogs = await publicClient.getLogs({
+          address: contractAddress,
+          event: eventsAbi[0],
+          fromBlock,
+        });
 
-  // Return all necessary states and the refresh function
-  return {
-    events,
-    error,
-    isLoading,
-    debugInfo,
-    fetchEvents
-  };
+        const withdrawLogs = await publicClient.getLogs({
+          address: contractAddress,
+          event: eventsAbi[1],
+          fromBlock,
+        });
+
+        const rebalanceLogs = await publicClient.getLogs({
+          address: contractAddress,
+          event: eventsAbi[2],
+          fromBlock,
+        });
+
+        // Combiner et trier les logs par bloc et index
+        const allLogs = [...depositLogs, ...withdrawLogs, ...rebalanceLogs]
+          .sort((a, b) => {
+            // Comparer les BigInt correctement
+            if (a.blockNumber === b.blockNumber) {
+              // Comparaison des logIndex en tant que BigInt
+              return a.logIndex > b.logIndex ? 1 : -1;
+            }
+            // Comparaison des blockNumber en tant que BigInt
+            return b.blockNumber > a.blockNumber ? 1 : -1;
+          });
+
+        setEvents(allLogs);
+        setLoading(false);
+      } catch (err) {
+        console.error("Erreur lors de la récupération des événements:", err);
+        setError(err);
+        setLoading(false);
+      }
+    };
+
+    fetchEvents();
+  }, [contractAddress, fromBlock, refreshKey]); // Ajout de refreshKey comme dépendance
+
+  return { events, loading, error };
 };
+
+export default useContractEvents;

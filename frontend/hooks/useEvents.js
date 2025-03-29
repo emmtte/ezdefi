@@ -1,19 +1,22 @@
 import { useState, useEffect } from 'react';
-import { usePublicClient } from 'wagmi';
 import { parseAbiItem } from 'viem';
-
+import { publicClient } from '@/utils/publicClient';
 
 export function useEvents({ address, eventAbi, fromBlock, toBlock = 'latest' }) {
   const [logs, setLogs] = useState([]);
-  const publicClient = usePublicClient();
 
   useEffect(() => {
     async function fetchLogs() {
-      if (!publicClient || !address || !eventAbi || !fromBlock) {
+      if (!address || !eventAbi || !fromBlock) {
         return;
       }
 
       try {
+        console.log('Fetching logs with client:', {
+          chainId: publicClient.chain.id,
+          chainName: publicClient.chain.name
+        });
+
         const fetchedLogs = await publicClient.getLogs({
           address: address,
           event: parseAbiItem(eventAbi),
@@ -27,8 +30,7 @@ export function useEvents({ address, eventAbi, fromBlock, toBlock = 'latest' }) 
     }
 
     fetchLogs();
-  }, [publicClient, address, eventAbi, fromBlock, toBlock]);
+  }, [address, eventAbi, fromBlock, toBlock]);
 
   return logs;
 }
-
