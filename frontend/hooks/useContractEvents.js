@@ -1,53 +1,98 @@
 import { useState, useEffect } from 'react';
-import { parseAbiItem } from 'viem';
-import { publicClient } from '@/utils/client';
-import { YIELD_OPTIMIZER_ADDRESS, YIELD_OPTIMIZER_ABI } from '@/utils/constants'
+import { publicClient } from '@/utils/publicClient';
 
-export const useContractEvents = () => {
-  
+// Définition des ABI des événements
+const eventsAbi = [
+  {
+    type: 'event',
+    name: 'Deposited',
+    inputs: [
+      { indexed: true, name: 'user', type: 'address' },
+      { indexed: false, name: 'amount', type: 'uint256' },
+      { indexed: false, name: 'shares', type: 'uint256' }
+    ]
+  },
+  {
+    type: 'event',
+    name: 'Withdrawn',
+    inputs: [
+      { indexed: true, name: 'user', type: 'address' },
+      { indexed: false, name: 'amount', type: 'uint256' },
+      { indexed: false, name: 'shares', type: 'uint256' }
+    ]
+  },
+  {
+    type: 'event',
+    name: 'Rebalanced',
+    inputs: [
+      { indexed: true, name: 'newVault', type: 'address' },
+      { indexed: false, name: 'amount', type: 'uint256' }
+    ]
+  }
+];
+
+/**
+ * Hook personnalisé pour récupérer les événements d'un contrat
+ * @param {string} contractAddress - Adresse du contrat
+ * @param {string|number} fromBlock - Bloc de départ pour la recherche (default: 'earliest')
+ * @param {number} refreshKey - Clé pour déclencher une actualisation
+ * @returns {Object} - Objet contenant les événements, l'état de chargement et les erreurs
+ */
+export const useContractEvents = (contractAddress, fromBlock = 'earliest', refreshKey = 0) => {
   const [events, setEvents] = useState([]);
-
-  const getEvents = async () => {
-    try {
-      const depositEvents = await publicClient.getLogs({
-        address: YIELD_OPTIMIZER_ADDRESS,
-        event: parseAbiItem('event etherDeposited(address indexed account, uint amount)'),
-        fromBlock: 7895383n,
-        toBlock: 'latest',
-      });
-
-      const withdrawEvents = await publicClient.getLogs({
-        address: YIELD_OPTIMIZER_ADDRESS,
-        event: parseAbiItem('event etherWithdrawed(address indexed account, uint amount)'),
-        fromBlock: 7895383n,
-        toBlock: 'latest',
-      });
-
-      const combinedEvents = depositEvents.map((event) => ({
-        type: 'Deposit',
-        address: event.args.account,
-        amount: event.args.amount,
-        blockTimestamp: Number(event.blockTimestamp),
-      })).concat(withdrawEvents.map((event) => ({
-        type: 'Withdraw',
-        address: event.args.account,
-        amount: event.args.amount,
-        blockTimestamp: Number(event.blockTimestamp),
-      })));
-
-      const sortedEvents = combinedEvents.sort((a, b) => Number(b.blockTimestamp) - Number(a.blockTimestamp));
-      setEvents(sortedEvents);
-    } catch (error) {
-      console.error("Erreur lors de la récupération des événements :", error);
-      // Gérer l'erreur ici, par exemple, afficher un message à l'utilisateur
-    }
-  };
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
-    if (YIELD_OPTIMIZER_ADDRESS) {
-      getEvents();
-    }
-  }, [YIELD_OPTIMIZER_ADDRESS]);
+    const fetchEvents = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        
+        // Obtenir les logs pour chaque type d'événement
+        const depositLogs = await publicClient.getLogs({
+          address: contractAddress,
+          event: eventsAbi[0],
+          fromBlock,
+        });
 
-  return events;
+        const withdrawLogs = await publicClient.getLogs({
+          address: contractAddress,
+          event: eventsAbi[1],
+          fromBlock,
+        });
+
+        const rebalanceLogs = await publicClient.getLogs({
+          address: contractAddress,
+          event: eventsAbi[2],
+          fromBlock,
+        });
+
+        // Combiner et trier les logs par bloc et index
+        const allLogs = [...depositLogs, ...withdrawLogs, ...rebalanceLogs]
+          .sort((a, b) => {
+            // Comparer les BigInt correctement
+            if (a.blockNumber === b.blockNumber) {
+              // Comparaison des logIndex en tant que BigInt
+              return a.logIndex > b.logIndex ? 1 : -1;
+            }
+            // Comparaison des blockNumber en tant que BigInt
+            return b.blockNumber > a.blockNumber ? 1 : -1;
+          });
+
+        setEvents(allLogs);
+        setLoading(false);
+      } catch (err) {
+        console.error("Erreur lors de la récupération des événements:", err);
+        setError(err);
+        setLoading(false);
+      }
+    };
+
+    fetchEvents();
+  }, [contractAddress, fromBlock, refreshKey]); // Ajout de refreshKey comme dépendance
+
+  return { events, loading, error };
 };
+
+export default useContractEvents;

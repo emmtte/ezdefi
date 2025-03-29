@@ -1,178 +1,178 @@
 'use client';
-import React, { useState, useEffect } from 'react';
-import { usePublicClient } from 'wagmi';
-import { YIELD_OPTIMIZER_ADDRESS, YIELD_OPTIMIZER_ABI } from '@/utils/constants';
-import { formatEther } from 'viem';
+
+import React, { useState, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
-import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/components/ui/card";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { YIELD_OPTIMIZER_ADDRESS } from '@/utils/constants';
+import { formatUnits } from 'viem';
+import { useContractEvents } from '@/hooks/useContractEvents';
+import { RefreshCw } from 'lucide-react';
 
-const Events = () => {
-  const [events, setEvents] = useState([]);
-  const [error, setError] = useState(null);
-  const [eventDefinitions, setEventDefinitions] = useState([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const publicClient = usePublicClient();
+// Composant d'affichage des événements
+const EventsComponent = () => {
+  const [refreshKey, setRefreshKey] = useState(0);
+  const [displayCount, setDisplayCount] = useState(10);
+  const { events, loading, error } = useContractEvents(YIELD_OPTIMIZER_ADDRESS, 'earliest', refreshKey);
 
-  // Liste explicite des événements à récupérer
-  const EVENT_NAMES = ['Deposited', 'Withdrawn', 'Rebalanced', 'Approval'];
+  // Fonction pour rafraîchir les données
+  const handleRefresh = useCallback(() => {
+    setRefreshKey(prevKey => prevKey + 1);
+  }, []);
 
-  const fetchEvents = async () => {
-    setIsLoading(true);
-    setError(null);
+  if (loading) return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <h2 className="text-2xl font-bold">Historique des événements</h2>
+        <Button variant="outline" size="sm" onClick={handleRefresh} disabled={loading}>
+          <RefreshCw className="w-4 h-4 mr-2" />
+          Actualiser
+        </Button>
+      </div>
+      <p className="text-center py-8">Chargement des événements...</p>
+    </div>
+  );
+  
+  if (error) return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <h2 className="text-2xl font-bold">Historique des événements</h2>
+        <Button variant="outline" size="sm" onClick={handleRefresh}>
+          <RefreshCw className="w-4 h-4 mr-2" />
+          Actualiser
+        </Button>
+      </div>
+      <div className="text-center py-8 text-red-500">
+        Erreur lors du chargement des événements: {error.message}
+      </div>
+    </div>
+  );
 
+  const formatAmount = (amount) => {
+    return formatUnits(amount, 18); // Ajustez la décimale selon votre token
+  };
+
+  const getEventDetails = (log) => {
     try {
-      // Filtrer les événements de l'ABI en fonction de la liste EVENT_NAMES
-      const filteredEventDefinitions = YIELD_OPTIMIZER_ABI.filter(
-        item => item.type === 'event' && EVENT_NAMES.includes(item.name)
-      );
-      setEventDefinitions(filteredEventDefinitions);
-
-      // Récupérer les logs pour chaque événement défini
-      const allLogs = await Promise.all(
-        filteredEventDefinitions.map(async (eventDef) => {
-          try {
-            const eventSignature = {
-              inputs: eventDef.inputs.map(input => ({
-                type: input.type,
-                name: input.name,
-                indexed: input.indexed
-              })),
-              name: eventDef.name,
-              type: 'event'
-            };
-
-            const logs = await publicClient.getLogs({
-              address: YIELD_OPTIMIZER_ADDRESS,
-              event: eventSignature,
-              fromBlock: 0n
-            });
-
-            // Transformer les logs avec le nom de l'événement et convertir les montants en ethers
-            return logs.map(log => {
-              const transformedLog = {
-                eventName: eventDef.name,
-                blockNumber: log.blockNumber,
-                ...log.args
-              };
-
-              // Convertir les montants en ethers pour les événements avec des valeurs numériques
-              if (transformedLog.amount) {
-                transformedLog.amount = formatEther(transformedLog.amount);
-              }
-              if (transformedLog.value) {
-                transformedLog.value = formatEther(transformedLog.value);
-              }
-              if (transformedLog.shares) {
-                transformedLog.shares = formatEther(transformedLog.shares);
-              }
-
-              return transformedLog;
-            });
-          } catch (error) {
-            console.error(`Erreur lors de la récupération des logs pour ${eventDef.name}:`, error);
-            setError(`Erreur pour ${eventDef.name}: ${error.message}`);
-            return [];
-          }
-        })
-      );
-
-      // Aplatir, combiner et trier les logs par ordre inverse (les plus récents en premier)
-      const combinedEvents = allLogs.flat().sort((a, b) => 
-        Number(b.blockNumber || 0) - Number(a.blockNumber || 0)
-      );
-
-      console.log('Événements combinés:', combinedEvents);
-      setEvents(combinedEvents);
-    } catch (error) {
-      console.error('Erreur globale lors de la récupération des événements:', error);
-      setError(error.message);
-    } finally {
-      setIsLoading(false);
+      const eventName = log.eventName;
+      
+      switch (eventName) {
+        case 'Deposited':
+          return {
+            title: "Dépôt",
+            textColor: "text-green-600",
+            content: (
+              <>
+                <p><span className="font-semibold">Utilisateur:</span> {log.args.user}</p>
+                <p><span className="font-semibold">Montant:</span> {formatAmount(log.args.amount)} USDC</p>
+                <p><span className="font-semibold">Parts:</span> {formatAmount(log.args.shares)} EZD</p>
+              </>
+            )
+          };
+        case 'Withdrawn':
+          return {
+            title: "Retrait",
+            textColor: "text-red-600",
+            content: (
+              <>
+                <p><span className="font-semibold">Utilisateur:</span> {log.args.user}</p>
+                <p><span className="font-semibold">Montant:</span> {formatAmount(log.args.amount)} USDC</p>
+                <p><span className="font-semibold">Parts brûlées:</span> {formatAmount(log.args.shares)} EZD</p>
+              </>
+            )
+          };
+        case 'Rebalanced':
+          return {
+            title: "Rééquilibrage",
+            textColor: "text-blue-600",
+            content: (
+              <>
+                <p><span className="font-semibold">Nouveau coffre-fort:</span> {log.args.newVault}</p>
+                <p><span className="font-semibold">Montant transféré:</span> {formatAmount(log.args.amount)} USDC</p>
+              </>
+            )
+          };
+        default:
+          return {
+            title: "Événement inconnu",
+            textColor: "text-gray-600",
+            content: <p>Type d'événement non reconnu</p>
+          };
+      }
+    } catch (err) {
+      console.error("Erreur lors du décodage de l'événement:", err);
+      return {
+        title: "Erreur",
+        textColor: "text-gray-600",
+        content: <p>Impossible de décoder cet événement</p>
+      };
     }
   };
 
-  useEffect(() => {
-    if (publicClient) {
-      fetchEvents();
-    }
-  }, [publicClient]);
-
-  const getEventColor = (eventName) => {
-    switch (eventName) {
-      case 'Deposited': return 'text-green-600';
-      case 'Withdrawn': return 'text-red-600';
-      case 'Approval': return 'text-blue-600';
-      default: return 'text-gray-600';
-    }
+  const formatDate = (timestamp) => {
+    if (!timestamp) return "Date inconnue";
+    return new Date(Number(timestamp) * 1000).toLocaleString();
   };
 
   return (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between space-y-0">
-        <CardTitle>Événements du contrat</CardTitle>
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <h2 className="text-2xl font-bold">Historique des événements</h2>
         <Button 
           variant="outline" 
-          size="sm"
-          onClick={fetchEvents}
-          disabled={isLoading}
+          size="sm" 
+          onClick={handleRefresh}
+          disabled={loading}
         >
-          {isLoading ? 'Chargement...' : 'Actualiser'}
+          <RefreshCw className="w-4 h-4 mr-2" />
+          Actualiser
         </Button>
-      </CardHeader>
+      </div>
       
-      <CardContent>
-        {error && (
-          <div className="bg-red-100 text-red-800 p-4 rounded-lg mb-4">
-            <strong>Erreur :</strong> {error}
-          </div>
-        )}
-
-        {eventDefinitions.length === 0 && (
-          <p className="text-yellow-600">{`Aucune définition d'événement trouvée dans l'ABI.`}</p>
-        )}
-
-        {events.length === 0 && !isLoading ? (
-          <p>Aucun événement trouvé.</p>
-        ) : (
-          <div className="space-y-2">
-            {events.map((event, index) => (
-              <Card key={index} className="w-full">
-                <CardHeader className="pb-2">
-                  <div className="flex justify-between items-center">
-                    <span className={`text-sm font-semibold ${getEventColor(event.eventName)}`}>
-                      {event.eventName}
-                    </span>
-                    {event.blockNumber && (
-                      <span className="text-xs text-muted-foreground">
-                        Block #{event.blockNumber.toString()}
-                      </span>
-                    )}
-                  </div>
-                </CardHeader>
-                <CardContent className="text-xs space-y-1">
-                  {Object.entries(event)
-                    .filter(([key]) => !['eventName', 'blockNumber'].includes(key))
-                    .map(([key, value]) => (
-                      <div key={key} className="flex justify-between">
-                        <span className="font-medium">{key}:</span>
-                        <span className="truncate ml-2">{value}</span>
+      {events.length === 0 ? (
+        <p className="text-center py-8">Aucun événement trouvé</p>
+      ) : (
+        <>
+          <div className="space-y-4">
+            {events.slice(0, displayCount).map((log, index) => {
+              const { title, textColor, content } = getEventDetails(log);
+              
+              return (
+                <Card key={`${log.blockNumber}-${log.logIndex}-${index}-${refreshKey}`} className="w-full">
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className={`text-sm font-medium ${textColor}`}>
+                      {title}
+                    </CardTitle>
+                    <div className="text-xs text-gray-500">
+                      Block #{log.blockNumber.toString()}
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-xs">{content}</div>
+                    {log.blockTimestamp && (
+                      <div className="mt-2 text-xs text-gray-500">
+                        {formatDate(log.blockTimestamp)}
                       </div>
-                    )
-                  )}
-                </CardContent>
-              </Card>
-            ))}
+                    )}
+                  </CardContent>
+                </Card>
+              );
+            })}
           </div>
-        )}
-
-        {isLoading && (
-          <div className="flex justify-center items-center py-4">
-            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-gray-900"></div>
-          </div>
-        )}
-      </CardContent>
-    </Card>
+          
+          {displayCount < events.length && (
+            <div className="text-center mt-4">
+              <Button 
+                variant="outline" 
+                onClick={() => setDisplayCount(prev => prev + 10)}
+              >
+                Afficher plus d'événements
+              </Button>
+            </div>
+          )}
+        </>
+      )}
+    </div>
   );
 };
 
-export default Events;
+export default EventsComponent;

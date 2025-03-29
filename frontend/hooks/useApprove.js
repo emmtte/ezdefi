@@ -18,7 +18,7 @@ export const useApprove = (tokenAddress, spenderAddress) => {
       });
     } catch (error) {
       console.error("Erreur lors de l'approbation :", error);
-      toast.error(`Erreur lors de l'approbation : ${error.shortMessage || error.message}`);
+      toast(`Erreur lors de l'approbation : ${error.shortMessage || error.message}`);
     }
   };
 
