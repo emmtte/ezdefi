@@ -10,12 +10,8 @@ import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 /// @dev Extension de l'interface IERC4626 standard
 interface Vault is IERC4626 {
     /// @notice Récupère le taux d'intérêt actuel du coffre-fort
-    /// @return _ Le taux d'intérêt en points de base
+    /// @return Le taux d'intérêt en points de base
     function getInterestRate() external view returns (uint256);
-    /// @notice Accumule les intérêts en créant de nouveaux tokens basés sur le taux d'intérêt actuel
-    /// @dev Calcule les intérêts en fonction du temps écoulé, des actifs totaux et du taux d'intérêt
-    /// @dev Crée uniquement des intérêts s'il y a des actifs dans le contrat et si du temps s'est écoulé
-    function accrueInterest() external;
 }
 
 /// @title YieldOptimizer - Optimiseur de rendement dynamique
@@ -122,7 +118,7 @@ contract YieldOptimizer is ERC20, Ownable {
     function totalAssets() public view returns (uint256) {
         uint256 total = asset.balanceOf(address(this));
         if (currentVault != address(0)) {
-            Vault vault = Vault(currentVault);
+            IERC4626 vault = IERC4626(currentVault);
             uint256 shares = vault.balanceOf(address(this));
             if (shares > 0) {
                 total += vault.previewRedeem(shares);
@@ -148,8 +144,8 @@ contract YieldOptimizer is ERC20, Ownable {
 
     /// @notice Rééquilibre les actifs vers le coffre-fort offrant le meilleur rendement
     /// @dev Peut être appelé uniquement par le propriétaire, avec un délai minimal de 12 heures
-    function rebalance() external  {  //onlyOwner
-        //require(block.timestamp >= lastRebalance + 12 hours, "Rebalance cooldown");
+    function rebalance() external onlyOwner {
+        require(block.timestamp >= lastRebalance + 12 hours, "Rebalance cooldown");
         address bestVault = findBestVault();
         if (bestVault != currentVault) {
             _withdrawFromCurrent();
@@ -181,10 +177,9 @@ contract YieldOptimizer is ERC20, Ownable {
     /// @dev Fonction interne utilisée lors du rééquilibrage
     function _withdrawFromCurrent() internal {
         if (currentVault != address(0)) {
-            Vault vault = Vault(currentVault);
+            IERC4626 vault = IERC4626(currentVault);
             uint256 shares = vault.balanceOf(address(this));
             if (shares > 0) {
-                vault.accrueInterest();
                 vault.redeem(shares, address(this), address(this));
             }
         }
@@ -195,8 +190,7 @@ contract YieldOptimizer is ERC20, Ownable {
     /// @dev Fonction interne utilisée lors des retraits partiels
     function _withdrawSomeFromCurrent(uint256 amount) internal {
         if (currentVault != address(0)) {
-            Vault vault = Vault(currentVault);
-            vault.accrueInterest();
+            IERC4626 vault = IERC4626(currentVault);
             vault.withdraw(amount, address(this), address(this));
         }
     }
@@ -207,7 +201,7 @@ contract YieldOptimizer is ERC20, Ownable {
     function _depositTo(address vault) internal {
         uint256 amount = asset.balanceOf(address(this));
         if (amount > 0) {
-            Vault(vault).deposit(amount, address(this));
+            IERC4626(vault).deposit(amount, address(this));
         }
     }
 
