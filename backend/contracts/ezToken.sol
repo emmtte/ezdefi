@@ -144,7 +144,7 @@ contract YieldOptimizer is ERC20, Ownable {
 
     /// @notice Rééquilibre les actifs vers le coffre-fort offrant le meilleur rendement
     /// @dev Peut être appelé uniquement par le propriétaire, avec un délai minimal de 12 heures
-    function rebalance() external onlyOwner {
+    function rebalance() external  {  //onlyOwner
         //require(block.timestamp >= lastRebalance + 12 hours, "Rebalance cooldown");
         address bestVault = findBestVault();
         if (bestVault != currentVault) {

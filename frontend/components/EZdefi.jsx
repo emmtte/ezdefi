@@ -54,9 +54,6 @@ const EZdefi = () => {
           <Vaults/>
         </div>
         <div>
-        <Rebalance />
-        </div>
-        <div>
           <USDC address={address} />
         </div>
         <div className="md:col-span-3">
@@ -73,13 +70,15 @@ const EZdefi = () => {
         <h1 className="text-2xl font-bold">Outils de tests des contrats</h1>
         <p></p>
       </div>
-
       <div className="grid grid-cols-1 md:grid-cols-3 gap-y-3 gap-x-0">
         <div>
           <Rate2 name="A" address={AAVE_USDC_ADDRESS} />
         </div>
         <div>
           <Rate2 name="B" address={COMPOUND_USDC_ADDRESS} />
+        </div>
+        <div>
+        <Rebalance />
         </div>
         <div>
           <USDCFaucet address={address} />

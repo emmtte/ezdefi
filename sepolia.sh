@@ -1,7 +1,7 @@
 cd backend
 npx hardhat clean
-#rm -rf ignition/deployments
-#rm -rf ignition/cache
+rm -rf ignition/deployments
+rm -rf ignition/cache
 npx hardhat ignition deploy ignition/modules/ezdefi.js --network sepolia
 node scripts/verify-all.js
 cd ..

@@ -46,7 +46,7 @@ const VaultsRebalance = () => {
                     </Button>
                 </CardContent>
                 <CardFooter className="text-xs text-gray-500">
-                    {!account ? "Connectez votre portefeuille pour rééquilibrer" : "Rééquilibrez automatiquement vos Vaults"}
+                    {!account ? "Connectez votre portefeuille pour Optimiser" : "Optimiser automatiquement le rendement"}
                 </CardFooter>
             </Card>
         </div>
