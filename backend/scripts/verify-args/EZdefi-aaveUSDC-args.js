@@ -1,5 +1,5 @@
 module.exports = [
-  "0xc66A9452e8b683255A498FCa77a7C837eb19C165",
+  "0x0c6AeE81d56E811eb4263918B8A390124E3eEE1C",
   "Aave USDC Vault",
   "aUSDC"
 ];
