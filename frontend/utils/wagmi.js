@@ -2,8 +2,7 @@ import '@rainbow-me/rainbowkit/styles.css';
 import { getDefaultConfig } from '@rainbow-me/rainbowkit';
 import { hardhat, sepolia } from 'wagmi/chains';
 import { defineChain } from 'viem';
-
-const isProduction = typeof window !== 'undefined' && window.location.hostname !== 'localhost';
+import { http } from 'viem';
 
 const customSepolia = defineChain({
   id: 11155111,
@@ -16,10 +15,10 @@ const customSepolia = defineChain({
   },
   rpcUrls: {
     default: {
-      http: [isProduction ? '/api/sepolia-proxy' : 'https://eth-sepolia.g.alchemy.com/v2/VXvc9IbtUntO_27RgSW1xxOvNIpZh5zV'],
+      http: ['https://eth-sepolia.g.alchemy.com/v2/VXvc9IbtUntO_27RgSW1xxOvNIpZh5zV'],
     },
     public: {
-      http: [isProduction ? '/api/sepolia-proxy' : 'https://eth-sepolia.g.alchemy.com/v2/VXvc9IbtUntO_27RgSW1xxOvNIpZh5zV'],
+      http: ['https://eth-sepolia.g.alchemy.com/v2/VXvc9IbtUntO_27RgSW1xxOvNIpZh5zV'],
     },
   },
   blockExplorers: {
@@ -28,9 +27,13 @@ const customSepolia = defineChain({
   testnet: true,
 });
 
+
 export const config = getDefaultConfig({
-  appName: 'EZdefi',
-  projectId: 'd3f86633ab6d1114bb1c18f0fdfbf72c',
-  chains: [customSepolia, hardhat],
-  ssr: true,
-});
+    appName: 'EZdefi',
+    projectId: 'd3f86633ab6d1114bb1c18f0fdfbf72c',
+    chains: [sepolia, hardhat],
+    transports: {
+      [sepolia.id]: http('https://eth-sepolia.g.alchemy.com/v2/VXvc9IbtUntO_27RgSW1xxOvNIpZh5zV'),
+    },
+    ssr: true, // If your dApp uses server side rendering (SSR)
+  });
