@@ -1,12 +1,11 @@
 require('dotenv').config();
 import { createPublicClient, http } from 'viem'
-import { sepolia, hardhat } from 'viem/chains'
-
+import { hardhat, sepolia } from 'viem/chains'
+//import { sepolia } from './sepolia.js'
 
 
 let publicClient;
 
-const RPC = process.env.NEXTPUBLICALCHEMY_RPC
 console.log('Environment CHAIN:', process.env.NEXT_PUBLIC_CHAIN);
 
 if (process.env.NEXT_PUBLIC_CHAIN === 'hardhat') {
@@ -20,7 +19,7 @@ if (process.env.NEXT_PUBLIC_CHAIN === 'hardhat') {
 
   publicClient = createPublicClient({ 
     chain: sepolia,
-    transport: http(RPC)
+    transport: http('https://eth-sepolia.g.alchemy.com/v2/VXvc9IbtUntO_27RgSW1xxOvNIpZh5zV')
   });
 
 }
