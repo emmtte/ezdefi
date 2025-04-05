@@ -1,6 +1,8 @@
 require('dotenv').config();
 import { createPublicClient, http } from 'viem'
-import { sepolia, hardhat } from 'viem/chains'
+import { hardhat } from 'viem/chains'
+import { sepolia } from './sepolia.js'
+
 
 let publicClient;
 
