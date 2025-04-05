@@ -31,5 +31,5 @@ export const config = getDefaultConfig({
     appName: 'EZdefi',
     projectId: 'd3f86633ab6d1114bb1c18f0fdfbf72c',
     chains: [customSepolia, hardhat],
-    ssr: true, // If your dApp uses server side rendering (SSR)
+    ssr: false, // If your dApp uses server side rendering (SSR)
   });
