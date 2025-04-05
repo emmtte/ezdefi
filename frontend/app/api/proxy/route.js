@@ -1,5 +1,4 @@
 // app/api/proxy/route.js
-
 export async function OPTIONS(req) {
     return new Response(null, {
       status: 204,
@@ -10,24 +9,21 @@ export async function OPTIONS(req) {
       },
     });
   }
-
-export async function POST(req) {
-    const targetUrl = 'https://sepolia.drpc.org/';
   
+  export async function POST(req) {
+    const targetUrl = 'https://sepolia.drpc.org/';
     try {
+      const requestBody = await req.text();
       const response = await fetch(targetUrl, {
         method: 'POST',
         headers: {
-          'Content-Type': req.headers.get('content-type'),
-          // Ajouter d'autres en-têtes si nécessaire
+          'Content-Type': 'application/json',
         },
-        body: await req.text(),
+        body: requestBody,
       });
-  
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
-  
       const data = await response.json();
       return Response.json(data);
     } catch (error) {
@@ -36,7 +32,7 @@ export async function POST(req) {
     }
   }
   
-  export async function GET(req) {
+  export async function GET(req){
       const targetUrl = 'https://sepolia.drpc.org/';
   
     try {
