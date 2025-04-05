@@ -1,4 +1,16 @@
 // app/api/proxy/route.js
+
+export async function OPTIONS(req) {
+    return new Response(null, {
+      status: 204,
+      headers: {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+        'Access-Control-Allow-Headers': 'Content-Type',
+      },
+    });
+  }
+
 export async function POST(req) {
     const targetUrl = 'https://sepolia.drpc.org/';
   
